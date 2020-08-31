@@ -1,0 +1,122 @@
+--Shft+Ctrl+I NONLOOP X-FADE PLAYLISTtell application id "com.figure53.QLab.4" to tell front workspace --tellA
+	
+	set mySelected to (selected as list)
+	set myCount to (count mySelected)
+	
+	repeat with myCurrentCue in mySelected --repeatA
+		
+		--get the unique id of current cue
+		set myID to uniqueID of myCurrentCue
+		
+		--move playback position
+		tell the current cue list --tellB
+			set playback position to cue id myID
+		end tell --tellB
+		
+		--set level and continue of current cue
+		tell front workspace --tellC
+			set originalLevel to myCurrentCue getLevel row 0 column 0
+			myCurrentCue setLevel column 0 row 0 db -120
+		end tell --tellC
+		set the continue mode of myCurrentCue to auto_continue
+		set myPostWait to ((duration of myCurrentCue) - 8)
+		
+		--if first cue is selected
+		if myCurrentCue's contents is the first item of mySelected then --ifA
+			
+			--make first fade
+			make type "Fade"
+			--find it's name
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			set the cue target of myNewCue to myCurrentCue
+			tell front workspace --tellD
+				myNewCue setLevel column 0 row 0 db originalLevel
+			end tell --tellD
+			set duration of myNewCue to 6
+			set post wait of myNewCue to myPostWait
+			set the continue mode of myNewCue to auto_continue
+			--set previous cue
+			set myPreviousCue to myCurrentCue
+			set myCount to myCount - 1
+			
+			--otherwise
+			
+		else if myCount is 1 then
+			make type "Fade"
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			set the cue target of myNewCue to myCurrentCue
+			tell front workspace
+				myNewCue setLevel column 0 row 0 db originalLevel
+			end tell
+			set the continue mode of myNewCue to auto_continue
+			set the duration of myNewCue to 6
+			--put in fade in or fade out??
+			--set the post wait of myNewCue to myPostWait
+			
+			
+			--make new faded and stop
+			make type "Fade"
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			set the cue target of myNewCue to myPreviousCue
+			tell front workspace
+				myNewCue setLevel column 0 row 0 db -120
+			end tell
+			set stop target when done of myNewCue to true
+			set continue mode of myNewCue to auto_continue
+			set duration of myNewCue to 8
+			set the post wait of myNewCue to myPostWait
+			set myPreviousCue to myCurrentCue
+			set myCount to myCount - 1
+			
+			--make last fade and stop
+			make type "Fade"
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			set cue target of myNewCue to myPreviousCue
+			tell front workspace
+				myNewCue setLevel column 0 row 0 db -120
+			end tell
+			set the continue mode of myNewCue to do_not_continue
+			set duration of myNewCue to 8
+			set stop target when done of myNewCue to true
+			--set the post wait of myNewCue to myPostWait
+			set myPreviousCue to myCurrentCue
+			set myCount to myCount - 1
+			
+		else
+			--make new fade
+			make type "Fade"
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			set the cue target of myNewCue to myCurrentCue
+			tell front workspace
+				myNewCue setLevel column 0 row 0 db originalLevel
+			end tell
+			set the continue mode of myNewCue to auto_continue
+			set duration of myNewCue to 6
+			--set the post wait of myNewCue to myPostWait
+			
+			--maek new fade and stop
+			make type "Fade"
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			set the cue target of myNewCue to myPreviousCue
+			tell front workspace
+				myNewCue setLevel column 0 row 0 db -120
+			end tell
+			set the post wait of myNewCue to myPostWait
+			set the stop target when done of myNewCue to true
+			set the continue mode of myNewCue to auto_continue
+			set duration of myNewCue to 8
+			set myPreviousCue to myCurrentCue
+			set myCount to myCount - 1
+			
+		end if --ifA
+		
+	end repeat --repeatA
+	
+	
+end tell --tellA

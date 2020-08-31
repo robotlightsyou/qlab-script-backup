@@ -1,0 +1,39 @@
+--Ctrl+F FADE IN SELECTED Q (*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+*** Naming may not function correctly if you have not set a name for selected cue in QLab, mostly seen when importing but not renaming audio files though it may occur elsewhere. Fading functionality not affected.
+
+*)
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	
+	set userDuration to 5
+	set userBump to 5
+	set originalCue to last item of (selected as list)
+	set originalCueType to q type of originalCue
+	set qnameStr to "Fade in: " & q name of originalCue
+	
+	set continue mode of originalCue to auto_continue
+	set originalLevel to originalCue getLevel row 0 column 0
+	originalCue setLevel row 0 column 0 db -70
+	if originalCueType is in {"Group", "Audio", "Video"} then
+		make type "Fade"
+		set newCue to last item of (selected as list)
+		set properties of newCue to {cue target:originalCue, duration:userDuration, q name:qnameStr}
+		
+		newCue setLevel row 0 column 0 db originalLevel
+		
+		if originalCueType is "Video" then
+			set opacity of newCue to 100
+			set do opacity of newCue to true
+			set opacity of originalCue to 0
+			
+		end if
+		
+		set q name of newCue to "Fade in: " & q name of originalCue
+		
+		
+	end if
+end tell

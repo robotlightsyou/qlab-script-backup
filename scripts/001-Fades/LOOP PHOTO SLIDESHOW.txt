@@ -1,0 +1,147 @@
+--Ctrl+S LOOP PHOTO SLIDESHOW(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*)
+
+-- Create slideshow from selected cues
+-- Tim Rogers <timmrogers@gmail.com>
+
+
+set finalPostWait to "0"
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	display dialog "Enter the number of seconds between cues:" default answer "10"
+	
+	--next block to insure user enters valid numeral
+	try
+		set myPostWait to (text returned of result) as number
+	on error
+		display alert "Invalid number" message "Please enter a valid number."
+		return
+	end try
+	
+	set mySelected to (selected as list)
+	set myCount to (count mySelected)
+	set loopStartTarget to first item of mySelected
+	
+	repeat with myCurrentCue in mySelected
+		
+		-- Get the uniqueID of the current cue
+		set myID to uniqueID of myCurrentCue
+		
+		-- Move the selection to the current cue        
+		tell the current cue list
+			set playback position to cue id myID
+		end tell
+		
+		-- Set opacity and continue mode of the current cue
+		set opacity of myCurrentCue to 0
+		set continue mode of myCurrentCue to auto_continue
+		
+		if myCurrentCue's contents is the first item of mySelected then
+			
+			
+			-- Make new fade cue
+			make type "Fade"
+			-- and find its name
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			-- and set its target, opacity, and post wait
+			set cue target of myNewCue to myCurrentCue
+			set opacity of myNewCue to 100
+			set do opacity of myNewCue to true
+			set post wait of myNewCue to myPostWait
+			set continue mode of myNewCue to auto_continue
+			-- Set previous cue
+			set myPreviousCue to myCurrentCue
+			set myCount to myCount - 1
+			
+			-- Otherwise
+			
+		else if myCount is 1 then
+			-- Make new fade cue
+			make type "Fade"
+			-- and find its name
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			-- and set its target and opacity
+			set cue target of myNewCue to myCurrentCue
+			set opacity of myNewCue to 100
+			set do opacity of myNewCue to true
+			set continue mode of myNewCue to auto_continue
+			
+			
+			-- Make new fade-and-stop cue
+			
+			make type "Fade"
+			-- and find its name
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			-- and set its target, opacity, post wait, and stop
+			set cue target of myNewCue to myPreviousCue
+			set opacity of myNewCue to 0
+			set do opacity of myNewCue to true
+			set post wait of myNewCue to myPostWait
+			set stop target when done of myNewCue to true
+			set continue mode of myNewCue to auto_continue
+			-- Set previous cue
+			set myPreviousCue to myCurrentCue
+			set myCount to myCount - 1
+			
+			--make last fade and stop
+			make type "Fade"
+			-- and find its name
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			-- and set its target, opacity, post wait, and stop
+			set cue target of myNewCue to myPreviousCue
+			set opacity of myNewCue to 0
+			set do opacity of myNewCue to true
+			set post wait of myNewCue to finalPostWait
+			set stop target when done of myNewCue to true
+			set continue mode of myNewCue to auto_continue
+			-- Set previous cue
+			set myPreviousCue to myCurrentCue
+			set myCount to myCount - 1
+			
+			
+		else
+			-- Make new fade cue
+			make type "Fade"
+			-- and find its name
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			-- and set its target and opacity
+			set cue target of myNewCue to myCurrentCue
+			set opacity of myNewCue to 100
+			set do opacity of myNewCue to true
+			set continue mode of myNewCue to auto_continue
+			-- Make new fade-and-stop cue
+			
+			make type "Fade"
+			-- and find its name
+			set myNewCueList to selected
+			set myNewCue to last item of myNewCueList
+			-- and set its target, opacity, post wait, and stop
+			set cue target of myNewCue to myPreviousCue
+			set opacity of myNewCue to 0
+			set do opacity of myNewCue to true
+			set post wait of myNewCue to myPostWait
+			set stop target when done of myNewCue to true
+			set continue mode of myNewCue to auto_continue
+			-- Set previous cue
+			set myPreviousCue to myCurrentCue
+			set myCount to myCount - 1
+			
+			
+		end if
+		
+		
+	end repeat
+	
+	make type "Start"
+	set loopStart to last item of (selected as list)
+	set cue target of loopStart to loopStartTarget
+	
+end tell

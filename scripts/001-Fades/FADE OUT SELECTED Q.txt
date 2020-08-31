@@ -1,0 +1,8 @@
+--Shft+Ctrl+F FADE OUT SELECTED Q(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+
+*** Naming may not function correctly if you have not set a name for selected cue in QLab, mostly seen when importing but not renaming audio files though it may occur elsewhere. Fading functionality not affected.
+
+*)tell application id "com.figure53.QLab.4" to tell front workspace			set userDuration to 5	set originalCue to last item of (selected as list)	set originalCueType to q type of originalCue		if originalCueType is in {"Group", "Audio", "Video"} then		make type "Fade"		set newCue to last item of (selected as list)		set qnameStr to "Fade and Stop: " & q name of originalCue		set properties of newCue to {cue target:originalCue, duration:userDuration, q name:qnameStr}		newCue setLevel row 0 column 0 db -120				set stop target when done of newCue to true		if q type of originalCue is "video" then			tell front workspace to tell paent of newCue				set do opacity of newCue to true				set opacity of newCue to 0			end tell		end if			else if originalCueType is "Fade" then		set originalCueTarget to cue target of originalCue		make type "Fade"		set newCue to last item of (selected as list)		set qnameStr to "Fade and Stop: " & q name of originalCue		set properties of newCue to {cue target:originalCueTarget, duration:userDuration, q name:qnameStr, stop target when done:true}		newCue setLevel row 0 column 0 db -120		if q type of originalCueTarget is "Video" then			tell front workspace to tell paent of newCue				set do opacity of newCue to true				set opacity of newCue to 0			end tell		end if	end if	end tell

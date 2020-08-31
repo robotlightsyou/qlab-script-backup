@@ -1,0 +1,78 @@
+--Op+V Make new videoglobal dialogTitle
+set dialogTitle to "New Projections Cue"
+
+tell application id "com.figure53.qlab.4" to tell front workspace
+	
+	set surf to my enterSomeText("Which surface?", "1", false)
+	set qNum to my enterSomeText("What Q number?", "1", false)
+	set myColor to "purple"
+	
+	make type "Video"
+	set newQ to last item of (selected as list)
+	set myCue to q number of newQ
+	set myOSC to "/cue/" & myCue & "/colorName " & myColor
+	do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+	set opacity of newQ to 0
+	set continue mode of newQ to auto_continue
+	set q number of newQ to "Proj " & qNum
+	set notes of newQ to "Surface " & surf
+	
+	delay 0.2
+	make type "Fade"
+	set fadeIn to last item of (selected as list)
+	set inCue to q number of fadeIn
+	set inOSC to "/cue/" & inCue & "/colorName " & myColor
+	do shell script "echo " & inOSC & " | nc -u -w 0 127.0.0.1 53535"
+	set do opacity of fadeIn to true
+	set opacity of fadeIn to 100
+	set cue target of fadeIn to newQ
+	set q number of fadeIn to "In P" & qNum
+	set notes of fadeIn to "Surface " & surf
+	
+	delay 0.01
+	make type "Group"
+	set groupQ to last item of (selected as list)
+	set q number of groupQ to "P" & qNum
+	set notes of groupQ to "Surface " & surf
+	set gCue to q number of groupQ
+	set gOSC to "/cue/" & gCue & "/colorName " & myColor
+	do shell script "echo " & gOSC & " | nc -u -w 0 127.0.0.1 53535"
+	set myQs to {newQ, fadeIn}
+	repeat with eachQ in myQs
+		tell parent of eachQ
+			set eachQID to uniqueID of eachQ
+			move cue id eachQID to end of groupQ
+		end tell
+	end repeat
+	
+	delay 0.1
+	make type "Fade"
+	set fadeOut to last item of (selected as list)
+	set outCue to q number of fadeOut
+	set outOSC to "/cue/" & outCue & "/colorName " & myColor
+	do shell script "echo " & outOSC & " | nc -u -w 0 127.0.0.1 53535"
+	set cue target of fadeOut to newQ
+	set do opacity of fadeOut to true
+	set opacity of fadeOut to 0
+	set stop target when done of fadeOut to true
+	set q number of fadeOut to "Out P" & qNum
+	set notes of fadeOut to "Surface " & surf
+	
+	tell current cue list
+		set playback position to newQ
+	end tell
+	
+end tell
+
+--subroutines
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText
