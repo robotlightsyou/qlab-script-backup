@@ -1,0 +1,19 @@
+--Op+C SET COLOR OF SELECTED(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*)
+
+-- Set color for selected cues
+-- Tim Rogers <timmrogers@gmail.com>
+-- Help and inspiration from https://figure53.hostedwiki.co/pages/QLab%20Scripts%20and%20Macros
+-- Updated to use OSC /cue/selected syntax
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	set myColor to choose from list {"none", "blue", "green", "grey", "orange", "purple", "red", "yellow"} with title "Color" with prompt "Select 
+color for selected cues" default items "none"
+	
+	set myOSC to "/cue/selected/colorName " & myColor
+	do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+	
+end tell

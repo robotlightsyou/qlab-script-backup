@@ -1,0 +1,170 @@
+--Shift+Ctrl+Q Make QList in Numbers(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+NEEDS:
+1. Presently all midi LX cues show a program change of 60 in Numbers, this is inaccurate, midi LX cues do not affect Yamaha LS9 programs.
+*)
+
+
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	
+	set numList to {}
+	set nameList to {}
+	set targetList to {}
+	set contList to {}
+	set notesList to {}
+	set durList to {}
+	set typeList to {}
+	set oscList to {}
+	set mscList to {}
+	set mqlList to {}
+	set mVoiceList to {}
+	
+	repeat with eachQ in (selected as list)
+		
+		try
+			set numList to numList & ((q number of eachQ) as string)
+			
+			set nameList to nameList & (q name of eachQ)
+			
+			set targetList to targetList & (file target of eachQ)
+			
+			set notesList to notesList & (notes of eachQ)
+			
+			set contList to contList & (continue mode of eachQ)
+			
+			set durList to durList & (duration of eachQ)
+			
+			set typeList to typeList & (q type of eachQ)
+			
+			if q type of eachQ is "midi" then
+				
+				try
+					set mscList to mscList & (q_number of eachQ)
+					
+					set mqlList to mqlList & (q_list of eachQ)
+					
+					set mVoiceList to mVoiceList & (byte one of eachQ)
+				end try
+			end if
+			
+			if q type of eachQ is "osc" then
+				set oscList to oscList & (custom message of eachQ)
+			end if
+			
+		end try
+		
+	end repeat
+	
+	tell application "Numbers"
+		
+		set thisDocument to make new document with properties {document template:template "QLab"}
+		tell the first table of active sheet of document 1
+			set rowNum to "3"
+			set colName to "B"
+			
+			repeat with i from 1 to count numList
+				set value of cell (colName & rowNum) to ((item i of numList) as string)
+				set rowNum to rowNum + 1
+				
+			end repeat
+			
+			set rowNum to "3"
+			set colName to "C"
+			
+			repeat with i from 1 to count nameList
+				set value of cell (colName & rowNum) to ((item i of nameList) as text)
+				set rowNum to rowNum + 1
+				
+			end repeat
+			
+			set rowNum to "3"
+			set colName to "D"
+			
+			repeat with i from 1 to count durList
+				set value of cell (colName & rowNum) to ((item i of durList) as text)
+				set rowNum to rowNum + 1
+				
+			end repeat
+			
+			set rowNum to "3"
+			set colName to "E"
+			
+			repeat with i from 1 to count contList
+				set value of cell (colName & rowNum) to ((item i of contList) as text)
+				set rowNum to rowNum + 1
+				
+			end repeat
+			
+			set rowNum to "3"
+			set colName to "A"
+			
+			repeat with i from 1 to count typeList
+				set value of cell (colName & rowNum) to ((item i of typeList) as text)
+				set rowNum to rowNum + 1
+			end repeat
+			
+			set rowNum to "3"
+			set colName to "F"
+			
+			repeat with i from 1 to count notesList
+				set value of cell (colName & rowNum) to ((item i of notesList) as text)
+				set rowNum to rowNum + 1
+			end repeat
+			
+			--set keyList to keyList & (hotkey trigger of eachQ)
+			set rowNum to "3"
+			set colName to "G"
+			
+			repeat with i from 1 to count targetList
+				
+				set value of cell (colName & rowNum) to ((item i of targetList) as text)
+				if value of cell (colName & rowNum) is equal to "missing value" then
+					set value of cell (colName & rowNum) to "--"
+				end if
+				set rowNum to rowNum + 1
+				
+			end repeat
+			
+			set rowNum to "3"
+			set colName to "H"
+			
+			repeat with i from 1 to count oscList
+				set value of cell (colName & rowNum) to ((item i of oscList) as text)
+				set rowNum to rowNum + 1
+				
+			end repeat
+			
+			set rowNum to "3"
+			set colName to "J"
+			
+			repeat with i from 1 to count mscList
+				set value of cell (colName & rowNum) to ((item i of mscList) as text)
+				set rowNum to rowNum + 1
+				
+			end repeat
+			
+			set rowNum to "3"
+			set colName to "I"
+			
+			repeat with i from 1 to count mqlList
+				set value of cell (colName & rowNum) to ((item i of mqlList) as text)
+				set rowNum to rowNum + 1
+				
+			end repeat
+			
+			set rowNum to "3"
+			set colName to "K"
+			
+			repeat with i from 1 to count mVoiceList
+				set value of cell (colName & rowNum) to ((item i of mVoiceList) as text)
+				set rowNum to rowNum + 1
+				
+			end repeat
+			
+		end tell
+	end tell
+end tell

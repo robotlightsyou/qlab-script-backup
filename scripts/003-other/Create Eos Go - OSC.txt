@@ -1,0 +1,25 @@
+--Ctrl+E Create Eos Go - OSCglobal dialogTitle
+set dialogTitle to "Create LX Cue OSC"
+tell application id "com.figure53.QLab.4" to tell front workspace
+		set lxNum to my enterSomeText("Enter Cue List/Cue Number in x/y format", "1/1", false)
+		set theLabel to lxNum
+		make type "OSC"
+		set thecue to last item of (selected as list)
+		set the patch of thecue to 2
+		set the osc message type of thecue to custom
+		set the custom message of thecue to " /eos/cue/" & lxNum & "/fire/"
+		set the q name of thecue to "LX " & theLabel -- names the cue based on EOS number
+		set the q number of thecue to "LX " & theLabel -- numbers the cue based on EOS number
+	end tell
+	
+	on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText

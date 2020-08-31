@@ -1,0 +1,80 @@
+--Shft+Ctrl+W CREATE SOUNDCHECK FROM SELECTED(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*)
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	set checkQ to last item of (selected as list)
+	set checkCueID to uniqueID of checkQ
+	set q number of checkQ to ""
+	set continue mode of checkQ to auto_continue
+	setLevel checkQ row 0 column 0 db -120
+setLevel checkQ row 0 column 3 db -120
+setLevel checkQ row 0 column 4 db -120
+setLevel checkQ row 0 column 5 db -120
+setLevel checkQ row 0 column 6 db -120
+	setLevel checkQ row 0 column 7 db -120
+
+	make type "group"
+	set groupQ to last item of (selected as list)
+	
+	set properties of groupQ to {mode:fire_first_go_to_next_cue, q name:"Speaker Check", q number:"CHECK"}
+	
+	
+	--display dialog "Enter the number of outputs to check." default answer "3"
+	
+	--next block to insure user enters valid numeral
+	--try
+	--set numOutputs to (text returned of result) as number
+	set numOutputs to "7"
+	(*	
+	on error
+		display alert "Invalid number" message "Please enter a valid number."
+		return
+	end try
+*)
+	
+	set qname to "Speaker 3"
+	make type "fade"
+	set fadeQ to last item of (selected as list)
+	set properties of fadeQ to {q name:qname, q number:"", continue mode:auto_continue, post wait:7, duration:5, cue target:checkQ}
+	setLevel fadeQ row 0 column 0 db -15
+	setLevel fadeQ row 0 column 3 db 0
+	setLevel fadeQ row 1 column 3 db 0
+	setLevel fadeQ row 2 column 3 db 0
+	set fadeCueID to uniqueID of fadeQ
+	tell parent of fadeQ
+		move cue id fadeCueID to end of cue (q number of groupQ)
+	end tell
+	
+	repeat with i from 4 to numOutputs
+		set qname to "Speaker " & i
+		make type "fade"
+		set fadeQ to last item of (selected as list)
+		set properties of fadeQ to {q name:qname, q number:"", continue mode:auto_continue, post wait:7, duration:5, cue target:checkQ}
+		set fadeCueID to uniqueID of fadeQ
+		tell parent of fadeQ
+			move cue id fadeCueID to end of cue (q number of groupQ)
+			setLevel fadeQ row 0 column 0 db -15
+			setLevel fadeQ row 0 column i db 0
+			setLevel fadeQ row 1 column i db 0
+			setLevel fadeQ row 1 column (i - 1) db -120
+			setLevel fadeQ row 2 column i db 0
+			setLevel fadeQ row 2 column (i - 1) db -120
+		end tell
+	end repeat
+	
+	make type "fade"
+	set stopQ to last item of (selected as list)
+	set properties of stopQ to {stop target when done:true, duration:5, cue target:checkQ, q number:""}
+	setLevel stopQ row 0 column 0 db -120
+	set stopCueID to uniqueID of stopQ
+	tell parent of stopQ
+		move cue id stopCueID to end of cue (q number of groupQ)
+	end tell
+	tell parent of checkQ
+		move cue id checkCueID to beginning of cue (q number of groupQ)
+	end tell
+	set q number of groupQ to ""
+end tell
