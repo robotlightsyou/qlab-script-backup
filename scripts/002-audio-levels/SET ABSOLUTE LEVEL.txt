@@ -1,0 +1,5 @@
+--Shift+Op+L SET ABSOLUTE LEVEL(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+Original from Rich Walsh template.*)tell application id "com.figure53.QLab.4" to tell front workspace	display dialog "Change the master level of selected cues to this:" default answer "-INF" with title "Change Level" with icon 1 buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel"			set newLevel to text returned of result		set theSelection to selected	repeat with eachCue in theSelection		if q type of eachCue is in {"Audio", "Video", "Fade"} then			tell front workspace				eachCue setLevel row 0 column 0 db newLevel			end tell		end if	end repeatend tell

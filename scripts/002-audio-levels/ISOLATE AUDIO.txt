@@ -1,0 +1,80 @@
+--Op+\ ISOLATE AUDIO(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*)
+
+global dialogTitle
+set dialogTitle to "Adjust crosspoints to isolate"
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	repeat with targetQ in (selected as list)
+		set numInputs to "10"
+		
+		set isoOutput to my enterSomeText("Isolate to which output? You can separate multiple entries with spaces.", "1", false)
+		set output to "1"
+		set chan to "1"
+		
+		--next block converts user input to functional data
+		set currentTIDs to AppleScript's text item delimiters
+		set AppleScript's text item delimiters to space
+		set levelsWords to text items of isoOutput
+		set howManyLevels to count levelsWords
+		set AppleScript's text item delimiters to "\\"
+		set backToText to levelsWords as text
+		set levelsArray to text items of backToText
+		set countLevelsArray to count levelsArray
+		set AppleScript's text item delimiters to currentTIDs
+		
+		--this section clears the current crosspoints
+		repeat with i from 1 to numInputs by 1
+			--if i is not equal to isoOutput then
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/" & i & " {}"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			set chan to chan + "1"
+			
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/" & i & " {}"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			set chan to "1"
+			set output to output + "1"
+			
+		end repeat
+		
+		--this section applies chosen isolation
+		repeat with j from 1 to countLevelsArray by "1"
+			set output to "1"
+			set chan to "1"
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/" & (item j of levelsArray) & " 0"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			set chan to chan + "1"
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/" & (item j of levelsArray) & " 0"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			
+			--this section adds subwoofer for DV theatre
+			(*
+			set output to "1"
+			set chan to "1"
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/7 0"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			set chan to chan + "1"
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/7 0"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			*)
+			
+		end repeat
+	end repeat
+end tell
+
+
+--subroutines
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText
