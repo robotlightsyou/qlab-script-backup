@@ -1,0 +1,17 @@
+--Op+1 Dowse Projector(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+set qname to "Dowse Projector"
+
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	set myCue to "Mute.Vid"
+	set optScript to (script source of cue "Mute.Vid.1")
+	make type "Script"
+	set newQ to last item of (selected as list)
+	set properties of newQ to {q name:qname, script source:optScript}
+	
+	
+end tell

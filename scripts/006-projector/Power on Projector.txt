@@ -1,0 +1,19 @@
+--Op+3 Power on Projector(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+-- make power on cue
+
+set qname to "Power On Projector"
+
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	set myCue to "OnPower.Vid"
+	set optScript to (script source of cue "OnPower.Vid.1")
+	make type "Script"
+	set newQ to last item of (selected as list)
+	set properties of newQ to {q name:qname, script source:optScript}
+	
+	
+end tell
