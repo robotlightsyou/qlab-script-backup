@@ -1,0 +1,6 @@
+-- Routine 3tell application "Terminal"
+	
+	do script "mosquitto_pub -d -u rthea -P fresnels -t inTopic -m \"3\"" in window 1
+	
+	
+end tell

@@ -1,0 +1,42 @@
+--Ctrl+B BUILD create 5s default +5dB BUILD fade of selected Group, Audio, Mic, Video or Fade Cue as next cue(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+set userDuration to 5
+set userLevel to 5
+set userKindString to "Build: "
+
+tell front workspace
+	try -- This protects against no selection (can't get last item of (selected as list))
+		set originalCue to last item of (selected as list)
+		set originalCueType to q type of originalCue
+		if originalCueType is "Group" then
+			make type "Fade"
+			set newCue to last item of (selected as list)
+			set cue target of newCue to originalCue
+			set duration of newCue to userDuration
+			newCue setLevel row 0 column 0 db userLevel
+			set q name of newCue to userKindString & q list name of originalCue
+		else if originalCueType is in {"Audio", "Mic", "Video"} then
+			make type "Fade"
+			set newCue to last item of (selected as list)
+			set cue target of newCue to originalCue
+			set duration of newCue to userDuration
+			set currentLevel to originalCue getLevel row 0 column 0
+			newCue setLevel row 0 column 0 db (currentLevel + userLevel)
+			set q name of newCue to userKindString & q list name of originalCue
+		else if originalCueType is "Fade" then
+			set originalCueTarget to cue target of originalCue
+			if q type of originalCueTarget is not "Group" then
+				make type "Fade"
+				set newCue to last item of (selected as list)
+				set cue target of newCue to originalCueTarget
+				set duration of newCue to userDuration
+				set currentLevel to originalCue getLevel row 0 column 0
+				newCue setLevel row 0 column 0 db (currentLevel + userLevel)
+				set q name of newCue to userKindString & q list name of originalCueTarget
+			end if
+		end if
+	end try
+end tell

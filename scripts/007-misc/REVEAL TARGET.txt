@@ -1,0 +1,17 @@
+--Op+. REVEAL TARGET(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	set selectedCue to last item of (selected as list)
+	if q type of selectedCue is "Audio" then
+		set fileTarget to file target of selectedCue
+		tell application "Finder"
+			reveal fileTarget
+			activate
+		end tell
+	end if
+	
+end tell

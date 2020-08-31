@@ -1,0 +1,43 @@
+--Ctrl+T GET TIME SELECTED(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*)
+
+--Created by Michael Portrie <mportrie@gmail.com>
+-- Updated by Tim Rogers <timmrogers@gmail.com>
+-- Altered by Jason Jensen <jsonjensen@gmail.com>
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	set totalSeconds to 0.0
+	set thisSeconds to 0.0
+	repeat with eachCue in (selected as list)
+		try
+			set thisSeconds to (duration of eachCue)
+			set totalSeconds to thisSeconds + totalSeconds
+		end try
+	end repeat
+	set h to totalSeconds div 3600
+	set s to totalSeconds - h * 3600
+	set m to s div 60
+	set s to s - m * 60
+	set s to (round (s * 100)) / 100
+	set h to h as text
+	if h < 10 then
+		set h to text -2 thru -1 of ("00" & h)
+	else
+		set h to h as text
+	end if
+	if m < 10 then
+		set m to text -2 thru -1 of ("00" & m)
+	else
+		set m to m as text
+	end if
+	if s < 10 then
+		set s to ("0" & s)
+	else
+		set s to s as text
+	end if
+	set prettySeconds to (h & ":" & m & ":" & s)
+	display notification prettySeconds with title "Total Time"
+	
+end tell

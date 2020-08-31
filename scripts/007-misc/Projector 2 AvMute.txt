@@ -1,0 +1,8 @@
+--Mute.Vid.2 Projector 2 AvMute(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+tell application "ProjectorManager"
+	AvMute 2 --Close shutter, mute volume projector x
+end tell

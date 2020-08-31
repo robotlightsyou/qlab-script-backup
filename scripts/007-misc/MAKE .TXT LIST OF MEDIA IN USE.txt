@@ -1,0 +1,229 @@
+-- MAKE .TXT LIST OF MEDIA IN USE(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+-- Best run as a separate process so it can be happening in the background
+
+set theExplanation to "This script creates a text file on the Desktop with a list of all the media files used as targets in the current workspace, " & Â
+	"removing duplicates and sorting alphabetically. It then opens the file in TextEdit."
+
+-- Declarations
+
+global dialogTitle, startTime
+set dialogTitle to "Make a list of media files"
+
+-- Preamble
+
+tell application id "com.figure53.QLab.4"
+	
+	display dialog theExplanation & return & return & "It may take a little while to run; are you sure you wish to proceed?" with title dialogTitle with icon 1 Â
+		buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel"
+	
+	-- Prepare variables for filename
+	
+	set fileTime to my grabTimeForFilename()
+	set workspaceName to q number of front workspace -- This actually gets the name of the workspace
+	
+	my startTheClock()
+	
+	-- Extract array of File Targets from QLab, skipping duplicates
+	
+	set mediaFiles to {}
+	set mediaFilesRef to a reference to mediaFiles
+	
+	tell front workspace
+		
+		-- First, the easy ones
+		
+		set validTargets to file target of cues whose broken is false and (q type is "Audio" or q type is "Video" or q type is "MIDI File")
+		set countValidTargets to count validTargets
+		
+		repeat with i from 1 to countValidTargets
+			
+			set eachTarget to item i of validTargets
+			set targetFile to POSIX path of alias eachTarget -- Convert to POSIX
+			if targetFile is not in mediaFilesRef then
+				set end of mediaFilesRef to targetFile
+			end if
+			
+			if i mod 100 is 0 and (countValidTargets - i) > 50 then -- Countdown timer (and opportunity to escape)
+				my countdownTimer(i, countValidTargets, "valid Audio, Video or MIDI File Cues")
+			end if
+			
+		end repeat
+		
+		-- Now, broken cues
+		
+		set brokenCues to cues whose broken is true and (q type is "Audio" or q type is "Video" or q type is "MIDI File")
+		set countBrokenCues to count brokenCues
+		
+		repeat with i from 1 to countBrokenCues
+			
+			set eachCue to item i of brokenCues
+			set eachTarget to file target of eachCue
+			if eachTarget is missing value then -- This will be returned by cues whose targets have become invalid
+				set eachName to q display name of eachCue
+				set targetFile to "**** Missing file target for cue named \"" & eachName & "\" ****"
+			else
+				set targetFile to POSIX path of alias eachTarget & " [BROKEN]"
+			end if
+			if targetFile is not in mediaFilesRef then
+				set end of mediaFilesRef to targetFile
+			end if
+			
+			if i mod 100 is 0 and (countBrokenCues - i) > 50 then -- Countdown timer (and opportunity to escape)
+				my countdownTimer(i, countBrokenCues, "broken Audio, Video or MIDI File Cues")
+			end if
+			
+		end repeat
+		
+	end tell
+	
+	-- Check there are some files
+	
+	if (count mediaFilesRef) is 0 then
+		activate
+		display dialog "No media files were found!" with title dialogTitle with icon 0 Â
+			buttons {"OK"} default button "OK" giving up after 60
+		return
+	end if
+	
+end tell
+
+-- Convert the list to text and sort it
+
+set currentTIDs to AppleScript's text item delimiters
+set AppleScript's text item delimiters to linefeed
+set theText to mediaFilesRef as text
+set AppleScript's text item delimiters to currentTIDs
+
+set sortedText to my sortTextIgnoringCase(theText)
+
+-- Create a string of the full path of the text file to be created
+
+set newFile to "" & (path to desktop) & "QLab | " & workspaceName & " | Media files in use | " & fileTime & ".txt"
+
+-- Make the file
+
+makeFileFromText(newFile, sortedText)
+
+-- Open it in TextEdit
+
+tell application "TextEdit"
+	activate
+	open file (newFile)
+	set zoomed of front window to true
+end tell
+
+finishedDialogBespoke()
+
+-- Subroutines
+
+(* === OUTPUT === *)
+
+on startTheClock() -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		display dialog "One moment callerÉ" with title dialogTitle with icon 1 buttons {"OK"} default button "OK" giving up after 1
+	end tell
+	set startTime to current date
+end startTheClock
+
+on countdownTimer(thisStep, totalSteps, whichCuesString) -- [Shared subroutine]
+	set timeTaken to round (current date) - startTime rounding as taught in school
+	set timeString to my makeMSS(timeTaken)
+	tell application id "com.figure53.QLab.4"
+		if frontmost then
+			display dialog "Time elapsed: " & timeString & " Ð " & thisStep & " of " & totalSteps & " " & whichCuesString & Â
+				" doneÉ" with title dialogTitle with icon 1 buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel" giving up after 1
+		end if
+	end tell
+end countdownTimer
+
+on finishedDialogBespoke()
+	set timeTaken to round (current date) - startTime rounding as taught in school
+	set timeString to my makeNiceT(timeTaken)
+	tell application "TextEdit"
+		activate
+		display dialog "Done." & return & return & "(That took " & timeString & ".)" with title dialogTitle with icon 1 Â
+			buttons {"OK"} default button "OK" giving up after 60
+	end tell
+end finishedDialogBespoke
+
+(* === TIME === *)
+
+on makeMSS(howLong) -- [Shared subroutine]
+	set howManyMinutes to howLong div 60
+	set howManySeconds to howLong mod 60 div 1
+	return howManyMinutes & ":" & my padNumber(howManySeconds, 2)
+end makeMSS
+
+on makeNiceT(howLong) -- [Shared subroutine]
+	if howLong < 1 then
+		return "less than a second"
+	end if
+	set howManyHours to howLong div 3600
+	if howManyHours is 0 then
+		set hourString to ""
+	else if howManyHours is 1 then
+		set hourString to "1 hour"
+	else
+		set hourString to howManyHours & " hours"
+	end if
+	set howManyMinutes to howLong mod 3600 div 60
+	if howManyMinutes is 0 then
+		set minuteString to ""
+	else if howManyMinutes is 1 then
+		set minuteString to "1 minute"
+	else
+		set minuteString to howManyMinutes & " minutes"
+	end if
+	set howManySeconds to howLong mod 60 div 1
+	if howManySeconds is 0 then
+		set secondString to ""
+	else if howManySeconds is 1 then
+		set secondString to "1 second"
+	else
+		set secondString to howManySeconds & " seconds"
+	end if
+	set theAmpersand to ""
+	if hourString is not "" then
+		if minuteString is not "" and secondString is not "" then
+			set theAmpersand to ", "
+		else if minuteString is not "" or secondString is not "" then
+			set theAmpersand to " and "
+		end if
+	end if
+	set theOtherAmpersand to ""
+	if minuteString is not "" and secondString is not "" then
+		set theOtherAmpersand to " and "
+	end if
+	return hourString & theAmpersand & minuteString & theOtherAmpersand & secondString
+end makeNiceT
+
+(* === TEXT WRANGLING === *)
+
+on padNumber(theNumber, minimumDigits) -- [Shared subroutine]
+	set paddedNumber to theNumber as text
+	repeat while (count paddedNumber) < minimumDigits
+		set paddedNumber to "0" & paddedNumber
+	end repeat
+	return paddedNumber
+end padNumber
+
+on sortTextIgnoringCase(theText) -- [Shared subroutine]
+	return do shell script "echo " & quoted form of theText & " | sort -f "
+end sortTextIgnoringCase
+
+(* === FILES === *)
+
+on grabTimeForFilename() -- [Shared subroutine]
+	return do shell script "date '+%y-%m-%d %H%M%S'"
+end grabTimeForFilename
+
+on makeFileFromText(newFilePath, fileContents) -- [Shared subroutine]
+	copy (open for access newFilePath with write permission) to theOpenFile
+	set eof theOpenFile to 0 -- Clear it out first (just in case it already existed)
+	write fileContents to theOpenFile
+	close access theOpenFile
+end makeFileFromText

@@ -1,0 +1,58 @@
+--Ctrl+Op+\ ASK USER RESET CROSSPOINTS STEREO(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+--this is a repeat of "Isolate Audio" that asks for total inputs instead of defaulting to 10
+
+global dialogTitle
+set dialogTitle to "Adjust crosspoints to isolate"
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	repeat with targetQ in (selected as list)
+		set numInputs to my enterSomeText("How many outputs?", "2", false)
+		
+		set output to "1"
+		set chan to "1"
+		
+		repeat with i from 1 to numInputs by 1
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/" & i & " {}"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			set chan to chan + "1"
+			
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/" & i & " {}"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			set chan to "1"
+			set output to output + "1"
+			
+		end repeat
+		
+		repeat with i from 1 to numInputs by 2
+			set output to "1"
+			set chan to "1"
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/" & i & " 0"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+		end repeat
+		set chan to chan + "1"
+		
+		repeat with i from 2 to numInputs by 2
+			set myOSC to "/cue/" & (q number of targetQ) & "/level/" & chan & "/" & i & " 0"
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+		end repeat
+		
+	end repeat
+end tell
+
+--subroutines
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText

@@ -1,0 +1,70 @@
+--Shft+Ctrl+R Prepend Q# of selected cue(s) [BROKEN](*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+Original from Rich Walsh template.*)
+
+set userIncrement to 1 -- Use this to specify the increment between numbers
+
+-- Declarations
+
+global dialogTitle
+set dialogTitle to "Renumber with a prefix"
+
+-- Main routine
+
+set startingNumber to text returned of (display dialog "WARNING: This script will renumber cues incremented by 1.
+
+Enter the Cue Number for the first selected cue:" with title dialogTitle with icon 1 Â
+	default answer "" buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel")
+
+set thePrefix to startingNumber
+set theSuffix to ""
+set nonNumberFound to false
+
+repeat with i from (count characters of startingNumber) to 1 by -1
+	if character i of startingNumber is not in characters of "0123456789" then
+		set nonNumberFound to true
+		set thePrefix to (characters 1 thru i of startingNumber) as text
+		try -- If the last character is not a number then theSuffix remains as ""
+			set theSuffix to (characters (i + 1) thru end of startingNumber) as text
+		end try
+		exit repeat
+	end if
+end repeat
+
+if nonNumberFound is false then -- Edge case where the text entered is a number with no prefix
+	set thePrefix to ""
+	set theSuffix to startingNumber
+end if
+
+set theSuffix to theSuffix as integer
+
+tell front workspace
+	
+	set selectedCues to (selected as list)
+	
+	-- Clear existing Cue Numbers
+	
+	repeat with eachCue in selectedCues
+		set q number of eachCue to ""
+	end repeat
+	
+	-- Get a list of numbers that can't be used
+	
+	set allNumbers to q number of cues
+	set allNumbersRef to a reference to allNumbers
+	
+	-- Renumber the cues
+	
+	repeat with eachCue in selectedCues
+		set newNumber to (thePrefix & theSuffix) as text
+		repeat until newNumber is not in allNumbersRef -- If the number is in use, then skip it
+			set theSuffix to theSuffix + userIncrement
+			set newNumber to (thePrefix & theSuffix) as text
+		end repeat
+		set q number of eachCue to newNumber
+		set theSuffix to theSuffix + userIncrement
+	end repeat
+	
+end tell

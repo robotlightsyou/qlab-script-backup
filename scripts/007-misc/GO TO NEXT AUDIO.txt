@@ -1,0 +1,45 @@
+--Op+A GO TO NEXT AUDIO(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+Original from Rich Walsh template.*)
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	-- This script only works if "Playback position is always the selected cue" is ON!
+	
+	
+	
+	try
+		
+		set currentCue to uniqueID of playback position of current cue list -- This will throw an error if there is no selection
+		
+		set allCues to uniqueID of cues
+		set allCuesRef to a reference to allCues
+		set countCues to count allCuesRef
+		set foundCues to uniqueID of cues whose q type is "Audio" -- Change this line to search for different properties, eg: q type is "Audio"
+		set foundCuesRef to a reference to foundCues
+		set currentIndex to countCues - 1
+		
+		-- Find where we are in the list
+		
+		repeat with i from 1 to countCues
+			if item i of allCuesRef is currentCue then
+				set currentIndex to i
+				exit repeat
+			end if
+		end repeat
+		
+		-- Find the next "found" cue in the list
+		
+		repeat with j from currentIndex + 1 to countCues
+			set foundIndex to item j of allCuesRef
+			if foundIndex is in foundCuesRef then
+				set playback position of current cue list to cue id foundIndex
+				exit repeat
+			end if
+		end repeat
+		
+	end try
+	
+end tell

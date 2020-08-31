@@ -1,0 +1,43 @@
+--Shft+Ctrl+E Create Eos Alternate - Midiglobal dialogTitle
+set dialogTitle to "Create Lx Cue Midi"
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	set lxNum to my enterSomeText("Enter Cue Number", "1", false)
+	
+	(*	
+set currentTIDs to AppleScript's text item delimiters
+	set AppleScript's text item delimiters to "/"
+	set levelsWords to text items of lxInput
+	set howManyLevels to count levelsWords
+	set AppleScript's text item delimiters to "\\"
+	set backToText to levelsWords as text
+	set levelsArray to text items of backToText
+	set lxList to 1
+	set lxNum to item 2 of levelsArray
+		set AppleScript's text item delimiters to currentTIDs
+	*)
+	
+	set theLabel to lxNum
+end tell
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	make type "Midi"
+	set thecue to last item of (selected as list)
+	set the qname to "LX " & theLabel -- names the cue based on EOS number
+	set the qNumber to "LX " & theLabel -- numbers the cue based on EOS number
+	set properties of thecue to {q name:qname, q number:qNumber, message type:msc, command format:1, command number:1, q_number:lxNum, q_list:1, q_path:1, deviceID:0, patch:2, continue mode:do_not_continue}
+	
+end tell
+
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText

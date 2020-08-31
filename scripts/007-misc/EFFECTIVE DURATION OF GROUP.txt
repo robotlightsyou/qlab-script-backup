@@ -1,0 +1,55 @@
+--Op+T EFFECTIVE DURATION OF GROUP(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+-- The effective duration of a Group Cue is the time it will take for the longest of its children to complete, ie: the longest effective duration of one of its children
+-- Each child cue has an effective Pre Wait, which is the cumulative time that must elapse before this child's Pre Wait is triggered
+-- In a "Fire all children simultaneously" Group Cue this effective Pre Wait is 0
+-- In a "Fire first child and go to next cue" Group Cue this effective Pre Wait is the sum of all the Pre Waits and Post Waits that have come before
+-- Note that auto-follow cues use their Durations as Post Waits (the actual Post Wait property is ignored); this is the value that must be added to the sum above
+-- The effective duration of a single cue that does not auto-follow is the sum of its effective Pre Wait, Duration & Post Wait
+-- The effective duration of a single cue that does auto-follow is the sum of its effective Pre Wait & Duration
+ 
+ *)
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	
+	repeat with eachCue in (selected as list)
+		try
+			set eachMode to mode of eachCue
+			set longestChildEffectiveDuration to 0
+			if eachMode is fire_all then
+				repeat with eachChild in cues of eachCue
+					set eachChildEffectiveDuration to (pre wait of eachChild) + (duration of eachChild) + (post wait of eachChild)
+					if eachChildEffectiveDuration > longestChildEffectiveDuration then
+						set longestChildEffectiveDuration to eachChildEffectiveDuration
+					end if
+				end repeat
+			end if
+			if eachMode is fire_first_go_to_next_cue then
+				set effectivePreWait to 0
+				repeat with eachChild in cues of eachCue
+					set eachPre to pre wait of eachChild
+					set effectivePreWait to effectivePreWait + eachPre
+					set eachContinueMode to continue mode of eachChild
+					if eachContinueMode is auto_follow then
+						set eachPost to duration of eachChild
+						set eachChildEffectiveDuration to effectivePreWait + eachPost
+					else
+						set eachPost to post wait of eachChild
+						set eachChildEffectiveDuration to effectivePreWait + (duration of eachChild) + eachPost
+					end if
+					set effectivePreWait to effectivePreWait + eachPost
+					if eachChildEffectiveDuration > longestChildEffectiveDuration then
+						set longestChildEffectiveDuration to eachChildEffectiveDuration
+					end if
+					if eachContinueMode is do_not_continue then
+						exit repeat -- No point looking at any further children that aren't part of the sequence
+					end if
+				end repeat
+			end if
+			set post wait of eachCue to longestChildEffectiveDuration
+		end try
+	end repeat
+end tell

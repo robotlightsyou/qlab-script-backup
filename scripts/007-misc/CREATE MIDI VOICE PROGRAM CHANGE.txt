@@ -1,0 +1,38 @@
+--Ctrl+M CREATE MIDI VOICE PROGRAM CHANGE(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+*)
+
+--created 6/13/17 by Michael Portrie
+-- last tested with QLab Version 3.2.10
+-- mportrie@gmail.com
+
+-- Notes: This version has different labeling -- it also inserts "LX xx" into the Q Number field. 
+-- This version also accepts cue lists with no problem. just enter cue list/cue number. if no list, just enter the number. 
+
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	display dialog "Midi Scene Change for Yamaha LS9
+	Enter desired program" buttons {"Create", "Cancel"} default button 1 default answer "1" with icon note
+	if button returned of result = "cancel" then
+		return
+	else
+		set prognum to (text returned of result) as text
+	end if
+	
+	set theOffset to (offset of "/" in prognum) + 1
+	
+	set theLabel to text theOffset thru end of prognum
+	
+end tell
+
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	make type "Midi"
+	set thecue to last item of (selected as list)
+	set the qname to "LS9 " & theLabel -- names the cue based on entered number
+	set properties of thecue to {q name:qname, message type:voice, channel:1, command:program_change, q number:"", byte one:prognum, deviceID:1, patch:2, continue mode:do_not_continue}
+	
+end tell

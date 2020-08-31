@@ -1,0 +1,597 @@
+-- Import from Eos
+-- ###FIXME### Impact of housing such a large script in the workspace unknown!
+-- ###FIXME### Testing has not been _exhaustive_, for obvious reasons!
+-- ###FIXME### Unclear whether script can run in the background while you continue working in QLab (or elsewhere)
+
+-- Best run as a separate process so it can be happening in the background
+
+set userEscapeHatchInterval to 50 -- Set the number of cues to process between each progress report / opportunity to cancel
+
+set theExplanation to "This script will attempt to import Eos cues from an open Excel CSV. It will not work if there is no Excel file open."
+
+-- Declarations
+
+global dialogTitle, userEscapeHatchInterval, startTime, ohDear, abortAbort, theSelectionRef
+set dialogTitle to "Import Eos"
+set theSelectionRef to ""
+
+global subChoiceImportCues, subChoiceImportNotes, subChoiceImportSceneEnds, subChoiceLogging, subChoiceSetColors
+
+--set processChoices to {"Import Cues From Eos", "Import Scene Notes", "Import Scene Ends", "Set Colors", "Build Logging Playlist", "Insert Logging Cues"}
+
+set processChoices to {"Import to existing cue list?", "Import to empty cue list?"}
+set subChoiceEmpty to {"Cues only", "Cues, Scene Notes, and Scene Ends"}
+set subChoiceExisting to {"Cues only", "Cues, Scene Notes, and Scene Ends"}
+
+(* -- Do I need sub choice for next routines, or just to start sub routine?
+
+set subChoiceColors to {} -- These values can be customised as they are never used explicitly
+set subChoiceLogPlaylist to {}
+set subChoiceLogCues to {}
+
+*)
+
+-- NB: use "false " rather than "false" in lists presented to pickFromList()
+
+-- Preamble
+
+set theProcess to ""
+set firstTime to true
+--repeat until theProcess is "Finished adjusting"
+
+set ohDear to false -- A simple flag to detect problems
+set abortAbort to false -- A flag for aborting!
+(*
+	-- Test for a selection; modify options if only one cue selected
+	
+	if firstTime is true then -- Only need to do this step once
+		
+		tell application id "com.figure53.QLab.4"
+			try
+				set theSelection to (selected of front workspace as list)
+			end try
+		end tell
+		
+		set theSelectionRef to a reference to theSelection
+		set countSelection to count theSelectionRef
+		if countSelection is 0 then
+			--return
+			set theProcess to "Import to empty cue list?"
+		end if
+		
+		set firstTime to false
+		
+	end if
+	
+	*)
+-- Choose a process
+--fix so it ends after one run through
+
+set theProcess to pickFromList(processChoices, theExplanation & return & return & Â
+	"So that you can run more than one process, you'll keep coming back to this screen until you hit any \"Cancel\" button, " & Â
+	"or choose \"Finished adjusting\"." & return & return & "Choose a property category:")
+
+-- Find out more about what we're doing, and then call a subroutine to do itÉ
+(*
+
+		
+		
+	if theProcess is "Set Colors" then
+		
+		doColors(theSelectionRef, "selected cues")
+		
+	else if theProcess is "Build Logging Playlist" then
+		
+		buildLogPlay(theSelectionRef, "selected cues")
+		
+	else if theProcess is "Insert Logging Cues" then
+		
+		insertLogCues(theSelectionRef, "selected cues")
+		*)
+
+if theProcess is "Import to existing cue list?" then
+	
+	set theChoice to pickFromList(subChoiceEmpty, "Choose how you would like to import")
+	
+	if theChoice is "Cues only" then
+		importA(theSelectionRef, "selected cues")
+	else if theChoice is "Cues, Scene Notes, and Scene Ends" then
+		importB(theSelectionRef, "selected cues")
+	end if
+	
+else if theProcess is "Import to empty cue list?" then
+	
+	set theChoice to pickFromList(subChoiceExisting, "Choose how you would like to import")
+	
+	if theChoice is "Cues only" then
+		importC(theSelectionRef, "selected cues")
+	else if theChoice is "Cues, Scene Notes, and Scene Ends" then
+		importD(theSelectionRef, "selected cues")
+	end if
+	
+end if
+
+--end repeat
+
+--subroutines
+
+on pickFromList(theChoice, thePrompt) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		choose from list theChoice with prompt thePrompt with title dialogTitle default items item 1 of theChoice
+		if result is not false then
+			return item 1 of result
+		else
+			error number -128
+		end if
+	end tell
+end pickFromList
+
+on importA(cuesToProcess, whichCuesString)
+	
+	(*Currently only moves cues if new placement is in group in Qlab 3, marks misplaced cues red. Fully functional in Qlab4 with edits*)
+	
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		
+		set namePrefix to "LX"
+		set lblCol to "F"
+		set listnumCol to "C"
+		set qnumCol to "D"
+		set qNotesCol to "AE"
+		set startRow to "3"
+		set endRow to "700"
+		set cueCount to ""
+		
+		set grabbedQs to (selected as list)
+		repeat with targetQ in (selected as list)
+			
+			set TEST to q number of targetQ
+			set rowNum to startRow
+			
+			tell application "Microsoft Excel"
+				repeat until (value of cell ("A" & rowNum) as string) is "END_TARGETS"
+					if (value of cell (qNotesCol & rowNum) as string) is not "" then
+						if (value of cell (qNotesCol & rowNum) as real) mod 1 is 0 then
+							set qNotesStr to (value of cell (qNotesCol & rowNum) as integer) as string
+						else
+							set qNotesStr to (value of cell (qNotesCol & rowNum) as string)
+						end if
+						
+						if qNotesStr is equal to TEST then
+							--next series creates data for settings in newQ
+							if (value of cell (qnumCol & rowNum) as real) mod 1 is 0 then
+								set qNumStr to (value of cell (qnumCol & rowNum) as integer) as string
+							else
+								set qNumStr to (value of cell (qnumCol & rowNum) as string)
+							end if
+							if (value of cell (lblCol & rowNum) as string) is not "" then
+								set lblTxt to " - " & (value of cell (lblCol & rowNum) as string) as string
+							else
+								set lblTxt to "" as string
+							end if
+							set qname to namePrefix & qNumStr & lblTxt
+							set groupName to lblTxt
+							set qCmd to ("/eos/cue/" & (value of cell (listnumCol & rowNum) as integer as string) & "/" & qNumStr & "/fire") as string
+							
+							tell application id "com.figure53.QLab.4" to tell front workspace
+								
+								set qlq to TEST & "LX"
+								make type "osc"
+								set newQ to last item of (selected as list)
+								set properties of newQ to {q name:qname, osc message type:custom, custom message:qCmd, q number:qlq, continue mode:auto_continue}
+								
+								set newCueID to uniqueID of newQ
+								
+								if q type of targetQ is "group" then
+									move cue id newCueID of parent of newQ to beginning of targetQ
+								else
+									tell parent of newQ
+										move cue id newCueID to after cue (q number of targetQ)
+									end tell
+									set continue mode of cue before newQ to auto_continue
+								end if
+								(*	
+								if q type of parent of newQ is not "group" then
+									tell parent of newQ
+										move cue id newCueID to after cue (q number of targetQ)
+									end tell
+								end if
+							*)
+								if q type of parent of newQ is not "group" then
+									set continue mode of newQ to do_not_continue
+								end if
+								
+								if q type of parent of newQ is "group" then
+									set cueCount to ((count cues) in parent of newQ)
+								end if
+								if cueCount is less than "2" then
+									set continue mode of newQ to do_not_continue
+								end if
+								
+								if q number of cue before newQ is not TEST then
+									set myColor to "red"
+									
+									set myOSC to "/cue/selected/colorName " & myColor
+									do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+									--set q color of newQ to "red"
+									
+								end if
+								
+								set rowNum to rowNum + 1
+								exit repeat
+							end tell
+							
+						else
+							set rowNum to rowNum + 1
+						end if
+						
+					else
+						set rowNum to rowNum + 1
+					end if
+					
+				end repeat
+				
+			end tell
+			
+		end repeat
+		set selected to (grabbedQs)
+		
+	end tell
+	
+end importA
+
+on importB(cuesToProcess, whichCuesString)
+	
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		set namePrefix to "LX"
+		set lblCol to "F"
+		set listnumCol to "C"
+		set qnumCol to "D"
+		set qNotesCol to "AE"
+		set sceneEndCol to "AG"
+		set sceneNotesCol to "AF"
+		set startRow to "3"
+		set endRow to "700"
+		set cueCount to ""
+		
+		set grabbedQs to (selected as list)
+		repeat with targetQ in (selected as list)
+			
+			set TEST to q number of targetQ
+			set rowNum to startRow
+			
+			tell application "Microsoft Excel"
+				repeat until (value of cell ("A" & rowNum) as string) is "END_TARGETS"
+					
+					set endName to ""
+					set noteName to ""
+					
+					if (value of cell (qNotesCol & rowNum) as string) is not "" then
+						if (value of cell (qNotesCol & rowNum) as real) mod 1 is 0 then
+							set qNotesStr to (value of cell (qNotesCol & rowNum) as integer) as string
+						else
+							set qNotesStr to (value of cell (qNotesCol & rowNum) as string)
+						end if
+						
+						if qNotesStr is equal to TEST then
+							--next series creates data for settings in newQ
+							if (value of cell (qnumCol & rowNum) as real) mod 1 is 0 then
+								set qNumStr to (value of cell (qnumCol & rowNum) as integer) as string
+							else
+								set qNumStr to (value of cell (qnumCol & rowNum) as string)
+							end if
+							if (value of cell (lblCol & rowNum) as string) is not "" then
+								set lblTxt to " - " & (value of cell (lblCol & rowNum) as string) as string
+							else
+								set lblTxt to "" as string
+							end if
+							
+							--checks for Scene End
+							if (value of cell (sceneEndCol & rowNum) as string) is "Scene_End" then
+								set endTxt to (value of cell (sceneNotesCol & rowNum) as string) as string
+								set endName to endTxt & " END"
+							else
+								set endTxt to "" as string
+							end if
+							
+							--checks for Scene Note
+							if (value of cell (sceneNotesCol & rowNum) as string) is not "" then
+								set noteTxt to (value of cell (sceneNotesCol & rowNum) as string) as string
+								set noteName to noteTxt & " BEGIN"
+							else
+								set noteTxt to "" as string
+							end if
+							
+							--build Q settings
+							set qname to namePrefix & qNumStr & lblTxt
+							set groupName to lblTxt
+							set qCmd to ("/eos/cue/" & (value of cell (listnumCol & rowNum) as integer as string) & "/" & qNumStr & "/fire") as string
+							
+							tell application id "com.figure53.QLab.4" to tell front workspace
+								
+								set qlq to TEST & "LX"
+								make type "osc"
+								set newQ to last item of (selected as list)
+								set properties of newQ to {q name:qname, osc message type:custom, custom message:qCmd, q number:qlq, continue mode:auto_continue}
+								
+								set newCueID to uniqueID of newQ
+								
+								if q type of targetQ is "group" then
+									move cue id newCueID of parent of newQ to beginning of targetQ
+								else
+									tell parent of newQ
+										move cue id newCueID to after cue (q number of targetQ)
+									end tell
+									set continue mode of cue before newQ to auto_continue
+								end if
+								
+								if q type of parent of newQ is not "group" then
+									set continue mode of newQ to do_not_continue
+								end if
+								
+								if q type of parent of newQ is "group" then
+									set cueCount to ((count cues) in parent of newQ)
+								end if
+								if cueCount is less than "2" then
+									set continue mode of newQ to do_not_continue
+								end if
+								
+								if q number of cue before newQ is not TEST then
+									set myColor to "red"
+									
+									set myOSC to "/cue/selected/colorName " & myColor
+									do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+									--set q color of newQ to "red"
+									
+								end if
+								
+								if noteName is not "" then
+									set noteNum to (q number of targetQ) & ".BEGIN"
+									make type "Memo"
+									set noteQ to last item of (selected as list)
+									set properties of noteQ to {q name:noteName, q number:noteNum, continue mode:do_not_continue}
+									set noteCueID to uniqueID of noteQ
+									
+									tell parent of noteQ
+										move cue id noteCueID to beginning of cue (q number of targetQ)
+									end tell
+									set myCue to q number of noteQ
+									set myColor to "yellow"
+									set myOSC to "/cue/" & myCue & "/colorName " & myColor
+									do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+								end if
+								
+								if endName is not "" then
+									set endNum to (q number of targetQ) & ".END"
+									make type "Memo"
+									set endQ to last item of (selected as list)
+									set properties of endQ to {q name:endName, q number:endNum, continue mode:do_not_continue}
+									set endCueID to uniqueID of endQ
+									tell parent of endQ
+										move cue id endCueID to after cue (q number of targetQ)
+									end tell
+									set contTestQ to cue before endQ
+									set continue mode of parent of contTestQ to auto_continue
+									set myCue to q number of endQ
+									set myColor to "yellow"
+									set myOSC to "/cue/" & myCue & "/colorName " & myColor
+									do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+								end if
+								
+								set rowNum to rowNum + 1
+								exit repeat
+							end tell
+							
+						else
+							set rowNum to rowNum + 1
+						end if
+						
+					else
+						set rowNum to rowNum + 1
+					end if
+					
+				end repeat
+				
+			end tell
+			
+		end repeat
+		set selected to (grabbedQs)
+		
+	end tell
+	
+end importB
+
+
+on importC(cuesToProcess, whichCuesString)
+	
+	set namePrefix to "LX "
+	set lblCol to "F"
+	set listnumCol to "C"
+	set qnumCol to "D"
+	set afCol to "W"
+	set startRow to "3"
+	set endRow to "700"
+	set rowNum to startRow
+	
+	set cellval to "Cell"
+	
+	tell application "Microsoft Excel"
+		repeat until (value of cell ("A" & rowNum) as string) is "END_TARGETS"
+			if (value of cell (afCol & rowNum - 1) as string) starts with "F" then
+				set rowNum to rowNum + 1
+			else if (value of cell (afCol & rowNum - 1) as string) starts with "H" then
+				set rowNum to rowNum + 1
+			else
+				if (value of cell (qnumCol & rowNum) as real) mod 1 is 0 then
+					set qNumStr to (value of cell (qnumCol & rowNum) as integer) as string
+				else
+					set qNumStr to (value of cell (qnumCol & rowNum) as string)
+				end if
+				if (value of cell (lblCol & rowNum) as string) is not "" then
+					set lblTxt to " - " & (value of cell (lblCol & rowNum) as string) as string
+				else
+					set lblTxt to "" as string
+				end if
+				set qname to namePrefix & qNumStr & lblTxt
+				set groupName to lblTxt
+				set qCmd to ("/eos/cue/" & (value of cell (listnumCol & rowNum) as integer as string) & "/" & qNumStr & "/fire") as string
+				
+				tell application id "com.figure53.QLab.4" to tell front workspace
+					make type "group"
+					set selectedCue to last item of (selected as list)
+					set mode of selectedCue to fire_all
+					set the q number of selectedCue to qNumStr
+					
+					if q type of selectedCue is "Group" then
+						make type "OSC"
+						set newQ to last item of (selected as list)
+						set q name of newQ to qname
+						set the q number of newQ to ""
+						set the osc message type of newQ to custom
+						set the custom message of newQ to qCmd
+						set newCueID to uniqueID of newQ
+						move cue id newCueID of parent of newQ to end of selectedCue
+						set rowNum to rowNum + 1
+						
+					end if
+				end tell
+			end if
+		end repeat
+	end tell
+	
+	
+end importC
+
+on importD(cuesToProcess, whichCuesString)
+	
+	set namePrefix to "LX "
+	set lblCol to "F"
+	set listnumCol to "C"
+	set qnumCol to "D"
+	set sceneEndCol to "AG"
+	set sceneNotesCol to "AF"
+	set afCol to "W"
+	set startRow to "3"
+	set endRow to "700"
+	set rowNum to startRow
+	
+	
+	
+	set cellval to "Cell"
+	
+	tell application "Microsoft Excel"
+		repeat until (value of cell ("A" & rowNum) as string) is "END_TARGETS"
+			set endName to ""
+			set noteName to ""
+			if (value of cell (afCol & rowNum - 1) as string) starts with "F" then
+				set rowNum to rowNum + 1
+			else if (value of cell (afCol & rowNum - 1) as string) starts with "H" then
+				set rowNum to rowNum + 1
+			else
+				if (value of cell (qnumCol & rowNum) as real) mod 1 is 0 then
+					set qNumStr to (value of cell (qnumCol & rowNum) as integer) as string
+				else
+					set qNumStr to (value of cell (qnumCol & rowNum) as string)
+				end if
+				if (value of cell (lblCol & rowNum) as string) is not "" then
+					set lblTxt to " - " & (value of cell (lblCol & rowNum) as string) as string
+				else
+					set lblTxt to "" as string
+				end if
+				
+				if (value of cell (sceneEndCol & rowNum) as string) is "Scene_End" then
+					set endTxt to (value of cell (sceneNotesCol & rowNum) as string) as string
+					set endName to endTxt & " END"
+				else
+					set endTxt to "" as string
+				end if
+				
+				if (value of cell (sceneNotesCol & rowNum) as string) is not "" then
+					set noteTxt to (value of cell (sceneNotesCol & rowNum) as string) as string
+					set noteName to noteTxt & " BEGIN"
+				else
+					set noteTxt to "" as string
+				end if
+				
+				set qname to namePrefix & qNumStr & lblTxt
+				set groupName to lblTxt
+				set qCmd to ("/eos/cue/" & (value of cell (listnumCol & rowNum) as integer as string) & "/" & qNumStr & "/fire") as string
+				
+				tell application id "com.figure53.QLab.4" to tell front workspace
+					make type "group"
+					set selectedCue to last item of (selected as list)
+					set mode of selectedCue to fire_all
+					set the q number of selectedCue to qNumStr
+					
+					if q type of selectedCue is "Group" then
+						make type "OSC"
+						set newQ to last item of (selected as list)
+						set q name of newQ to qname
+						set the q number of newQ to ""
+						set the osc message type of newQ to custom
+						set the custom message of newQ to qCmd
+						set newCueID to uniqueID of newQ
+						move cue id newCueID of parent of newQ to end of selectedCue
+						
+					end if
+					
+					--creates newQ, then moves it into targetQ, deletes newQ if targetQ is not group
+					if endName is not "" then
+						set endNum to (q number of selectedCue) & ".END"
+						make type "Memo"
+						set endQ to last item of (selected as list)
+						set properties of endQ to {q name:endName, q number:endNum, continue mode:do_not_continue}
+						
+						set endCueID to uniqueID of endQ
+						tell parent of endQ
+							move cue id endCueID to after cue (q number of selectedCue)
+						end tell
+						set contTestQ to cue before endQ
+						set continue mode of parent of contTestQ to auto_continue
+						set myCue to q number of endQ
+						set myColor to "yellow"
+						
+						set myOSC to "/cue/" & myCue & "/colorName " & myColor
+						do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+					end if
+					
+					--creates newQ, then moves it into targetQ, deletes newQ if targetQ is not group
+					if noteName is not "" then
+						set noteNum to (q number of selectedCue) & ".BEGIN"
+						make type "Memo"
+						set noteQ to last item of (selected as list)
+						set properties of noteQ to {q name:noteName, q number:noteNum, continue mode:auto_continue}
+						
+						set noteCueID to uniqueID of noteQ
+						tell parent of noteQ
+							move cue id noteCueID to beginning of selectedCue
+						end tell
+						if q type of cue before noteQ is not "group" then
+							set continue mode of parent of noteQ to auto_continue
+						else
+							set continue mode of parent of parent of noteQ to auto_continue
+						end if
+						
+						set myCue to q number of noteQ
+						set myColor to "yellow"
+						
+						set myOSC to "/cue/" & myCue & "/colorName " & myColor
+						do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+					end if
+					
+					
+				end tell
+				
+				set rowNum to rowNum + 1
+			end if
+		end repeat
+	end tell
+	
+end importD
+
+
+
+--doColors
+--buildLogPlay
+--insertLogCues
+--import eos a
+--import eos b

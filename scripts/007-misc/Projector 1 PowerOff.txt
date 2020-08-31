@@ -1,0 +1,8 @@
+--OffPower.Vid.1 Projector 1 PowerOff(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+tell application "ProjectorManager"
+	PowerOff 1 --projector x
+end tell

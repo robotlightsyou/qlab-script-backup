@@ -1,0 +1,8 @@
+--Input.Proj.1 Projector 1 rotate input (*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+tell application "ProjectorManager"
+	Inpt 1 --change input of x projector
+end tell

@@ -1,0 +1,3 @@
+-- nointernetset spot to "TON"
+
+do shell script "scselect " & spot

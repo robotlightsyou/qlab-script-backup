@@ -1,0 +1,37 @@
+--ShftCtrlOp+R Append Q# of selected cue(s)(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+Original from Rich Walsh template.*)
+
+-- Declarations
+
+global dialogTitle
+set dialogTitle to "Add suffix to Cue Number"
+
+-- Check the clipboard for a previous suffix
+
+try
+	set clipboardContents to the clipboard
+on error
+	set clipboardContents to ""
+end try
+
+if clipboardContents contains return or clipboardContents contains linefeed then -- Slight protection against spurious Clipboard contents
+	set clipboardContents to ""
+end if
+
+-- Main routine
+
+set theSuffix to text returned of (display dialog "Enter the suffix to append:" with title dialogTitle with icon 1 Â
+	default answer clipboardContents buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel")
+
+tell front workspace
+	repeat with eachCue in (selected as list)
+		set q number of eachCue to (q number of eachCue & theSuffix)
+	end repeat
+end tell
+
+-- Copy the suffix to the Clipboard
+
+set the clipboard to theSuffix

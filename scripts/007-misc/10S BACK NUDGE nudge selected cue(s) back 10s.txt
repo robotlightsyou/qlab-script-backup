@@ -1,0 +1,28 @@
+--Shift+Ctrl+< 10S BACK NUDGE nudge selected cue(s) back 10s(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+-- Only works properly when run as a separate process!
+
+set userNudge to -10
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	repeat with eachCue in (selected as list)
+		if q type of eachCue is not "Script" then -- Protect the script from running on itself
+			try
+				if running of eachCue is true then
+					pause eachCue
+					set startFlag to true
+				else
+					set startFlag to false
+				end if
+				set currentTime to action elapsed of eachCue
+				load eachCue time currentTime + userNudge
+				if startFlag is true then
+					start eachCue
+				end if
+			end try
+		end if
+	end repeat
+end tell

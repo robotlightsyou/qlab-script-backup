@@ -1,0 +1,57 @@
+-- REPLACE MIDI WITH OSC(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+.*)
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	set oscPatch to 1 -- Change this to the patch you're using in your workspace to send OSC to the Eos/Ion/Gio/Nomad
+	
+	set eosPreamble to "/eos/cue/"
+	set eosPostamble to "/fire"
+	
+	set selectedCues to (selected as list)
+	
+	--gather details of existing midi cues
+	repeat with eachCue in selectedCues
+		if q type of eachCue is "MIDI" and message type of eachCue is msc and command number of eachCue is 1 then -- OK, it's an MSC cue sending a GO
+			
+			set eachCueID to uniqueID of eachCue -- necessary for deleting later
+			set qNumber to q_number of eachCue -- MSC q number field
+			
+			-- If there's a cue list number in the MSC cue, use it. Otherwise, use the default "1"
+			if q_list of eachCue is not "" then
+				set qlist to q_list of eachCue -- MSC q list field
+			else
+				set qlist to "1"
+			end if
+			
+			-- Gather cue properties to duplicate in new cue
+			set cueNumber to q number of eachCue
+			set cueName to q name of eachCue
+			set continueMode to continue mode of eachCue
+			set preWait to pre wait of eachCue
+			set postWait to post wait of eachCue
+			
+			set selected to cue id eachCueID
+			
+			--make new OSC with gathered details
+			make type "OSC" -- make the new OSC cue
+			set newCue to last item of (selected as list)
+			
+			set patch of newCue to oscPatch
+			set osc message type of newCue to custom
+			set custom message of newCue to eosPreamble & qlist & "/" & qNumber & eosPostamble
+			
+			delete cue id eachCueID of parent of eachCue -- delete MSC cue
+			
+			-- Duplicate MSC cue's properties on the new OSC cue
+			set q number of newCue to cueNumber
+			set q name of newCue to cueName
+			set continue mode of newCue to continueMode
+			set pre wait of newCue to preWait
+			set post wait of newCue to postWait
+			
+		end if
+	end repeat
+end tell

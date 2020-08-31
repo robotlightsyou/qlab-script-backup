@@ -1,0 +1,126 @@
+--OP+H Make Custom Hex Cue(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+-- Use the following variable definitions to automate any of the dialogs. Just give it a value, and comment out the dialog below to disable it. For example, set IPAddress to "192.168.1.251" if you'll always use that value.
+
+
+
+set commandName to "" -- Any text will suffice: it's used for a comment in code, as well as the new cue's name
+
+set newCueNumber to "" -- This will be unique each time. If you don't want a number, just comment out the dialog below and leave this empty.
+
+set hexCode to "" -- Space-delimited hex codes.
+
+set IPAddress to "" -- The device's IP address, e.g. 192.168.1.251
+
+set networkPort to "" -- The device's receiving network port e.g. 50000
+
+set protocolChoice to "" -- UDP if you need it, leave it empty for TCP.
+
+
+
+set commandName to text returned of (display dialog "Command Name:" default answer "Kramer In 1" with title "Command Name" with icon 1 buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel")
+
+
+
+set newCueNumber to text returned of (display dialog "New Cue Number:" default answer "1001" with title "Cue Number" with icon 1 buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel")
+
+
+
+set hexCode to text returned of (display dialog "Hex Code (ensure a space character between each hex byte):" default answer "01 82 81 81" with title "Hex Code" with icon 1 buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel")
+
+
+
+set IPAddress to text returned of (display dialog "IP Address:" default answer "192.168.1.185" with title "IP Address" with icon 1 buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel")
+
+
+
+set networkPort to text returned of (display dialog "Network Port:" default answer "50000" with title "Network Port" with icon 1 buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel")
+
+
+
+set protocolChoice to button returned of (display dialog "TCP or UDP?" with title "TCP or UDP?" with icon 1 buttons {"Cancel", "TCP", "UDP"} default button "UDP" cancel button "Cancel")
+
+
+
+-- Use nc's default TCP, or specify UDP?
+
+set transportProtocol to ""
+
+if protocolChoice is "UDP" then
+	
+	set transportProtocol to "-u "
+	
+end if
+
+
+
+-- parse space-delimited list of hex codes to a list called eachHexByte
+
+set oldTIDs to AppleScript's text item delimiters
+
+set newTIDs to {" "}
+
+set AppleScript's text item delimiters to newTIDs
+
+set eachHexByte to every text item of hexCode
+
+set AppleScript's text item delimiters to oldTIDs
+
+
+
+-- make hex codes echo-able
+
+set hexCodeString to ""
+
+repeat with eachByte from 1 to (count eachHexByte)
+	
+	set thisByte to item eachByte of eachHexByte
+	
+	-- strip hextra code (0x or $ or however the manufacturer spells it out)
+	
+	set thisByteCount to count (characters of thisByte)
+	
+	if thisByteCount is greater than 2 then
+		
+		set thisByte to characters (thisByteCount - 1) thru thisByteCount of thisByte
+		
+	end if
+	
+	set hexCodeString to hexCodeString & "\\\\x" & thisByte
+	
+end repeat
+
+
+
+-- put together the shell script
+
+set shellScript to "echo -ne '" & hexCodeString & "'|nc " & transportProtocol & IPAddress & " " & networkPort & " > /dev/null 2>&1 &"
+
+
+
+-- put together the source of the script cue
+
+set scriptSource to "-- " & commandName & return & "try" & return & "do shell script " & "\"" & shellScript & "\"" & return & "end try"
+
+
+
+-- make a new script cue using the script source
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	make type "Script"
+	
+	set theScriptCue to (first item of (selected as list))
+	
+	set script source of theScriptCue to scriptSource
+	
+	compile theScriptCue
+	
+	set q name of theScriptCue to commandName
+	
+	set q number of theScriptCue to newCueNumber
+	
+end tell

@@ -1,0 +1,212 @@
+-- Set Lighting Protocol(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+--check on midi q path for eos
+
+*)
+
+set theExplanation to "This script will set the lighting protocol for the Ctrl+E hotkey, and suppress the alternate protocol to Shift+Ctrl+E"
+
+global dialogTitle, userPatch, userDeviceID
+set dialogTitle to "Set Lighting Protocol"
+set userPatch to "2"
+set userDeviceID to "0"
+
+set processChoices to {"OSC", "Midi"}
+
+set theProcess to ""
+
+set theChoice to pickFromList(processChoices, theExplanation & return & return & Â
+	"Choose a lighting protocol:")
+
+if theChoice is "OSC" then
+	set userPatch to enterSomeText("Enter output patch, default is 2, reserving 1 for localhost", "2", false)
+	my setOscScript(userPatch)
+	
+else if theChoice is "Midi" then
+	
+	set userDeviceID to enterSomeText("Enter DeviceID", "0", false)
+	set userPatch to enterSomeText("Enter output patch, default is 2, reserving 1 for localhost", "2", false)
+	my setMidiScript(userDeviceID, userPatch)
+	
+end if
+
+on setOscScript(userPatch)
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		set eosQ to cue "Ctrl+E"
+		set q name of eosQ to "Create Eos Go - OSC"
+		set script source of eosQ to "global dialogTitle
+set dialogTitle to \"Create LX Cue OSC\"
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+		set lxNum to my enterSomeText(\"Enter Cue List/Cue Number in x/y format\", \"1/1\", false)
+		set theLabel to lxNum
+		make type \"OSC\"
+		set thecue to last item of (selected as list)
+		set the patch of thecue to " & userPatch & "
+		set the osc message type of thecue to custom
+		set the custom message of thecue to \" /eos/cue/\" & lxNum & \"/fire/\"
+		set the q name of thecue to \"LX \" & theLabel -- names the cue based on EOS number
+		set the q number of thecue to \"LX \" & theLabel -- numbers the cue based on EOS number
+	end tell
+	
+	on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id \"com.figure53.QLab.4\"
+		set theAnswer to \"\"
+		repeat until theAnswer is not \"\"
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {\"Cancel\", \"OK\"} Â
+				default button \"OK\" cancel button \"Cancel\")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText"
+	end tell
+	
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		set eos2Q to cue "Shft+Ctrl+E"
+		set q name of eos2Q to "Create Eos Alternate - Midi"
+		set script source of eos2Q to "global dialogTitle
+set dialogTitle to \"Create Lx Cue Midi\"
+
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+	set lxInput to my enterSomeText(\"Enter Cue List/Cue Number in x/y format\", \"1/1\", false)
+	set currentTIDs to AppleScript's text item delimiters
+	set AppleScript's text item delimiters to \"/\"
+	set levelsWords to text items of lxInput
+	set howManyLevels to count levelsWords
+	set AppleScript's text item delimiters to \"\\\\\"
+	set backToText to levelsWords as text
+	set levelsArray to text items of backToText
+	set lxList to item 1 of levelsArray
+	set lxNum to item 2 of levelsArray
+	set AppleScript's text item delimiters to currentTIDs
+	set theLabel to lxList & \"/\" & lxNum
+end tell
+
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+	
+	make type \"Midi\"
+	set thecue to last item of (selected as list)
+	set the qname to \"LX \" & theLabel -- names the cue based on EOS number
+	set the qNumber to \"LX \" & theLabel -- numbers the cue based on EOS number
+	set properties of thecue to {q name:qname, q number:qNumber, message type:msc, command format:1, command number:1, q_number:lxNum, q_list:lxList, q_path:1, deviceID: " & userDeviceID & ", patch:" & userPatch & ", continue mode:do_not_continue}
+	
+end tell
+
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id \"com.figure53.QLab.4\"
+		set theAnswer to \"\"
+		repeat until theAnswer is not \"\"
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {\"Cancel\", \"OK\"} Â
+				default button \"OK\" cancel button \"Cancel\")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText"
+		
+	end tell
+end setOscScript
+
+on setMidiScript(userDeviceID, userPatch)
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		set eosQ to cue "Ctrl+E"
+		set q name of eosQ to "Create Eos Go - Midi"
+		set script source of eosQ to "global dialogTitle
+set dialogTitle to \"Create Lx Cue Midi\"
+
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+	set lxInput to my enterSomeText(\"Enter Cue List/Cue Number in x/y format\", \"1/1\", false)
+	set currentTIDs to AppleScript's text item delimiters
+	set AppleScript's text item delimiters to \"/\"
+	set levelsWords to text items of lxInput
+	set howManyLevels to count levelsWords
+	set AppleScript's text item delimiters to \"\\\\\"
+	set backToText to levelsWords as text
+	set levelsArray to text items of backToText
+	set lxList to item 1 of levelsArray
+	set lxNum to item 2 of levelsArray
+	set AppleScript's text item delimiters to currentTIDs
+	set theLabel to lxList & \"/\" & lxNum
+end tell
+
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+	
+	make type \"Midi\"
+	set thecue to last item of (selected as list)
+	set the qname to \"LX \" & theLabel -- names the cue based on EOS number
+	set the qNumber to \"LX \" & theLabel -- numbers the cue based on EOS number
+	set properties of thecue to {q name:qname, q number:qNumber, message type:msc, command format:1, command number:1, q_number:lxNum, q_list:lxList, q_path:1, deviceID: " & userDeviceID & ", patch:" & userPatch & ", continue mode:do_not_continue}
+	
+end tell
+
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id \"com.figure53.QLab.4\"
+		set theAnswer to \"\"
+		repeat until theAnswer is not \"\"
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {\"Cancel\", \"OK\"} Â
+				default button \"OK\" cancel button \"Cancel\")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText"
+		
+	end tell
+	
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		set eos2Q to cue "Shft+Ctrl+E"
+		set q name of eos2Q to "Create Eos Alternate - OSC"
+		set script source of eos2Q to "global dialogTitle
+set dialogTitle to \"Create LX Cue OSC\"
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+		set lxNum to my enterSomeText(\"Enter Cue List/Cue Number in x/y format\", \"1/1\", false)
+		set theLabel to lxNum
+		make type \"OSC\"
+		set thecue to last item of (selected as list)
+		set the patch of thecue to " & userPatch & "
+		set the osc message type of thecue to custom
+		set the custom message of thecue to \" /eos/cue/\" & lxNum & \"/fire/\"
+		set the q name of thecue to \"LX \" & theLabel -- names the cue based on EOS number
+		set the q number of thecue to \"LX \" & theLabel -- numbers the cue based on EOS number
+	end tell
+	
+	on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id \"com.figure53.QLab.4\"
+		set theAnswer to \"\"
+		repeat until theAnswer is not \"\"
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {\"Cancel\", \"OK\"} Â
+				default button \"OK\" cancel button \"Cancel\")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText"
+	end tell
+end setMidiScript
+
+--subroutines
+
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText
+
+on pickFromList(theChoice, thePrompt) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		choose from list theChoice with prompt thePrompt with title dialogTitle default items item 1 of theChoice
+		if result is not false then
+			return item 1 of result
+		else
+			error number -128
+		end if
+	end tell
+end pickFromList

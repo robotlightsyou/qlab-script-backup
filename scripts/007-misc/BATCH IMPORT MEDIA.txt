@@ -1,0 +1,357 @@
+--Ctrl+Op+I BATCH IMPORT MEDIA(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+Original from Rich Walsh template of allthatyouhear.com*)
+
+set userCopyOnImport to true -- Set this to false if you do not want the files to be copied to the workspace folder
+set userForceCopyFromNetwork to true -- Set this to false if you do not want files that aren't on local drives to be copied automatically
+set userReassuranceThreshold to 5 -- When the number of files imported is greater than this variable, a dialog will let you know that the process is complete
+
+-- ###FIXME### Should audioFileTypes include "public.ulaw-audio"?
+-- ###FIXME### Is videoFileTypes a sufficiently exhaustive list? Are any of the file types not supported by QLab?
+
+-- Declarations
+
+global dialogTitle, sharedPath, numCues
+set dialogTitle to "Import files"
+set numCues to "2"
+set numCues to my enterSomeText("How many cues in your show? Enter up to 999.
+
+Also, probably turn the sound down.", "2", false)
+
+
+set audioFileTypes to {"com.apple.coreaudio-format", "com.apple.m4a-audio", "com.microsoft.waveform-audio", "public.aifc-audio", "public.aiff-audio", Â
+	"public.audio", "public.mp3", "public.mpeg-4-audio"}
+(* This list deliberately excludes "com.apple.protected-mpeg-4-audio" to protect against old DRM-restricted iTunes files *)
+set videoFileTypes to {"com.adobe.photoshop-image", "com.apple.icns", "com.apple.macpaint-image", "com.apple.pict", "com.apple.quicktime-image", Â
+	"com.apple.quicktime-movie", "public.3gpp", "public.3gpp2", "public.avi", "public.camera-raw-image", "public.image", "public.jpeg", "public.jpeg-2000", Â
+	"public.movie", "public.mpeg", "public.mpeg-4", "public.png", "public.tiff", "public.video", "public.xbitmap-image"}
+set midiFileTypes to {"public.midi-audio"}
+
+(* cf: https://developer.apple.com/library/content/documentation/Miscellaneous/Reference/UTIRef/Articles/System-DeclaredUniformTypeIdentifiers.html *)
+
+set theFileTypes to {audioFileTypes, videoFileTypes, midiFileTypes}
+set foldersExist to {null, null, null}
+set theSubfolders to {"audio", "video", "midi file"}
+set theCueTypes to {"Audio", "Video", "MIDI File"}
+
+-- Main routine
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	-- Establish the path to the current workspace
+	
+	---------------------------------------------
+	--STUFF RICH DID THAT I KINDA UNDERSTAND--
+	---------------------------------------------
+	
+	set workspacePath to path
+	if workspacePath is missing value then
+		display dialog "The current workspace has not yet been saved anywhere." with title dialogTitle with icon 0 Â
+			buttons {"OK"} default button "OK" giving up after 5
+		return
+	end if
+	
+	-- Get the path that should prefix all media file paths
+	
+	tell application "System Events"
+		set sharedPath to path of container of file workspacePath
+	end tell
+	
+	-- Choose the files to import
+	
+	set newTargets to choose file of type {"public.image", "public.audiovisual-content"} Â
+		with prompt "Please select one or more audio, video or MIDI files:" with multiple selections allowed
+	
+	-- Import them
+	display dialog "Mixing Cuemicals" with title dialogTitle with icon 1 buttons {"OK"} default button "OK" giving up after 1
+	
+	repeat with eachFile in newTargets
+		
+		tell application "System Events"
+			set eachType to type identifier of eachFile
+			set eachName to name of eachFile
+			if userForceCopyFromNetwork is true then -- Only check file's locality if it will be relevant
+				set fileIsLocal to local volume of disk (volume of eachFile)
+			else
+				set fileIsLocal to true
+			end if
+		end tell
+		
+		set eachTarget to eachFile -- This variable will be updated if the file is copied
+		
+		-- Work through the three types of cues that will be processed
+		
+		repeat with i from 1 to 3
+			
+			if eachType is in contents of item i of theFileTypes then
+				
+				if (userCopyOnImport is true) or (userForceCopyFromNetwork is true and fileIsLocal is false) then
+					
+					-- If copying is specified by the user definitions thenÉ
+					
+					-- Check for appropriate subfolder next to workspace and make it if it doesn't exist
+					
+					if item i of foldersExist is null then
+						set item i of foldersExist to my checkForFolder(item i of theSubfolders)
+						if item i of foldersExist is false then
+							my makeFolder(item i of theSubfolders)
+						end if
+					end if
+					
+					-- If the file is not already in place, copy it to the appropriate subfolder
+					
+					if my checkForFile(item i of theSubfolders, eachName) is false then
+						my copyFileViaFinder(item i of theSubfolders, eachFile)
+					end if
+					
+					set eachTarget to sharedPath & item i of theSubfolders & ":" & eachName
+					
+				end if
+				
+				-- Make an appropriate cue
+				
+				make type item i of theCueTypes
+				set newCue to last item of (selected as list)
+				set properties of newCue to {file target:eachTarget, q number:""}
+				--fix ghosting names, try without delay
+				tell application "System Events"
+					keystroke "q"
+					delay 0.1
+					key code 36
+				end tell
+				
+			end if
+		end repeat
+		
+	end repeat
+	
+	---------------
+	--MAKE GROUPS--
+	---------------
+	
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		
+		display dialog "Preparing groups" with title dialogTitle with icon 1 buttons {"OK"} default button "OK" giving up after 1
+		
+		repeat with g from 1 to numCues
+			make type "group"
+			set newGroup to last item of (selected as list)
+			set properties of newGroup to {q number:g, q name:"Cue " & g, mode:fire_all}
+		end repeat
+		
+	end tell
+	
+	---------------
+	--SELECT ALL--
+	---------------
+	
+	delay 0.5
+	tell application "System Events"
+		keystroke "a" using {command down}
+		--delay 0.1
+	end tell
+	
+	--------------------------
+	--RENUMBER FOR MOVE--
+	--------------------------
+	
+	
+	display dialog "Doing some math, this may take a moment" with title dialogTitle with icon 1 buttons {"OK"} default button "OK" giving up after 1.5
+	
+	--this is ugly, how to set test as list or array?
+	
+	repeat with gnum from 1 to numCues
+		set y to "1"
+		repeat with eachQ in (selected as list)
+			
+			if (q name of eachQ begins with gnum & " ") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with gnum & ".") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with gnum & "-") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with gnum & ")") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with "0" & gnum & " ") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with "0" & gnum & ".") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with "0" & gnum & "-") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with "0" & gnum & ")") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with "00" & gnum & " ") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with "00" & gnum & ".") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with "00" & gnum & "-") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+			else if (q name of eachQ begins with "00" & gnum & ")") then
+				set q number of eachQ to ((gnum & "." & y) as string)
+				set y to y + "1"
+				
+			else
+				set y to y + "1"
+				
+			end if
+			
+		end repeat
+		
+	end repeat
+	
+	-------------------------
+	--MOVE INTO GROUPS--
+	-------------------------
+	
+	display dialog "Shuffle up and deal!" with title dialogTitle with icon 1 buttons {"OK"} default button "OK" giving up after 1
+	
+	repeat with eachQ in (selected as list)
+		set eachQID to uniqueID of eachQ
+		repeat with p from 1 to numCues
+			if q number of eachQ begins with p & "." then
+				move cue id eachQID of parent of eachQ to end of cue (p as text)
+			end if
+		end repeat
+	end repeat
+	
+	
+	
+	
+	try
+		repeat with selectedCue in (selected as list)
+			if q type of selectedCue is "Group" then
+				if (count cues of selectedCue) is not 1 then
+					set theCues to cues of selectedCue
+					set previousPre to 0
+					set mode of selectedCue to fire_first_enter_group
+					repeat with eachCue in theCues
+						set eachPre to pre wait of eachCue
+						set deltaTime to eachPre - previousPre
+						set previousPre to eachPre
+						set pre wait of eachCue to deltaTime
+						if contents of eachCue is not last item of theCues then
+							set continue mode of eachCue to auto_continue
+						end if
+					end repeat
+					set q name of selectedCue to ((q name of selectedCue) & " options")
+				end if
+			end if
+		end repeat
+	end try
+	
+	--------------------------
+	--SORTING COMPLETE--
+	--------------------------
+	
+	
+	display dialog "Helping groups identify as their true self" with title dialogTitle with icon 1 buttons {"OK"} default button "OK" giving up after 1.5
+	
+	
+	set optionName to " (drag final choice here, delete options group)"
+	
+	repeat with theQ in (selected as list)
+		
+		
+		if q type of theQ is "Group" then
+			set groupNum to q number of theQ
+			if (count cues of theQ) is not 1 then
+				make type "group"
+				set optionGroup to last item of (selected as list)
+				set optionGroupID to the uniqueID of optionGroup
+				set theQID to uniqueID of theQ
+				set optionName to "Drag final choice here, delete options group"
+				set properties of optionGroup to {q name:"Cue " & groupNum & optionName, q number:"", mode:fire_all}
+				--working line, revert to here
+				move cue id optionGroupID of parent of optionGroup to end of cue (groupNum as text)
+				(*
+				set originalCueIsIn to parent of theQ
+				if parent of optionGroup is originalCueIsIn then -- Only reorder the cues if they are in the same group/cue list
+					set originalCueID to uniqueID of theQ
+					--set newCueID to uniqueID of newCue
+					move cue id originalCueID of originalCueIsIn to cue after cue id optionGroupID of originalCueIsIn
+			end if
+				
+				
+				
+				tell parent of optionGroup
+					move cue id optionGroupID to after cue (groupNum as text)
+				end tell
+				*)
+			end if
+			
+		end if
+		
+	end repeat
+	
+	--------------------------
+	--REMOVE Q NUMBERS--
+	--------------------------
+	delay 0.1
+	tell application "System Events"
+		keystroke "a" using {command down}
+		delay 0.1
+		keystroke "d" using {command down}
+	end tell
+	
+	
+	
+end tell
+
+if (count newTargets) > userReassuranceThreshold then
+	display dialog "Done." with title dialogTitle with icon 1 buttons {"OK"} default button "OK" giving up after 5
+end if
+
+-- Subroutines
+
+on checkForFolder(theSuffix) -- [Shared subroutine]
+	tell application "System Events"
+		return exists folder (sharedPath & theSuffix)
+	end tell
+end checkForFolder
+
+on makeFolder(theFolder) -- [Shared subroutine]
+	tell application "Finder"
+		make new folder at sharedPath with properties {name:theFolder}
+	end tell
+end makeFolder
+
+on checkForFile(theSuffix, theName) -- [Shared subroutine]
+	tell application "System Events"
+		return exists file (sharedPath & theSuffix & ":" & theName)
+	end tell
+end checkForFile
+
+on copyFileViaFinder(theSuffix, theFile)
+	(* NB: by using the Finder the usual file-copy progress window is invoked, which may be more reassuring than the faceless
+	'do shell script "cp -p " & quoted form of POSIX path of theFile & " " & quoted form of POSIX path of (sharedPath & theSuffix & ":" & theName)'
+	- which may look like a freeze (the -p flag copies every property of a file; "theName" would need to be passed to the subroutine to implement this) *)
+	tell application "Finder"
+		duplicate theFile to folder (sharedPath & theSuffix)
+	end tell
+end copyFileViaFinder
+
+
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText
