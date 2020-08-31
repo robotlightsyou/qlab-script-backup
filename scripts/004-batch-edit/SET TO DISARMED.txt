@@ -1,0 +1,6 @@
+--Shift+Ctrl+A SET TO DISARMEDtell application id "com.figure53.QLab.4" to tell front workspace
+	
+	repeat with eachQ in (selected as list)
+		set the armed of eachQ to false
+	end repeat
+end tell

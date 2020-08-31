@@ -1,0 +1,32 @@
+--Shift+Op+R RENUMBER WITH LETTERS(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*) 
+
+(*
+
+needs--
+
+1. add X.1, X.2, X.n if in group
+2. add shorthand for cue type(ie LX4?)
+
+*)
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	set allCues to (selected as list)
+	set qNumber to 1
+	set alphabet to "ZABCDEFGHJKLMPRSTVWXYZ"
+	repeat with myCue in allCues
+		set qNumber to qNumber + 1
+		set tempNumber to qNumber
+		set qLetter to ""
+		repeat while tempNumber > 1
+			set tempNumber to tempNumber - 1
+			set qLetter to (character (tempNumber mod 21 + 1) of alphabet) & qLetter
+			set tempNumber to round (tempNumber / 21) rounding up
+		end repeat
+		set q number of myCue to qLetter
+	end repeat
+	
+end tell

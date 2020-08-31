@@ -1,0 +1,13 @@
+--Shft+Ctrl+O TOGGLE OSC(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*)
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	set foundCues to every cue whose osc message type is custom
+	set foundCuesRef to a reference to foundCues
+	repeat with eachCue in foundCuesRef
+		set armed of eachCue to not armed of eachCue
+	end repeat
+end tell

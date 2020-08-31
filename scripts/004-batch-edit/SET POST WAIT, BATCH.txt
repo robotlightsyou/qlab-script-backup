@@ -1,0 +1,28 @@
+--Shift+W SET POST WAIT, BATCH(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+Original from Rich Walsh template.*)
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	-- Declarations
+	global dialogTitle
+	set dialogTitle to "Batch adjust Post Wait"
+	
+	-- Get the continue mode required
+	set theText to {text returned} of (display dialog Â
+		"Set Post Wait of selected cues to (return an empty string to cancel):" with title dialogTitle with icon 1 Â
+		default answer "")
+	
+	-- Check for cancel
+	if theText is "" then
+		error number -128
+	end if
+	
+	-- Adjust the cues
+	repeat with eachCue in (selected as list)
+		set post wait of eachCue to theText
+	end repeat
+	
+end tell

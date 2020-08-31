@@ -1,0 +1,57 @@
+--Shift+C BATCH ADJUST CONTINUE MODE(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+
+Original from Rich Walsh template.*)
+
+-- Declarations
+
+global dialogTitle
+set dialogTitle to "Batch adjust Continue Mode"
+
+-- Get the Continue Mode required
+
+set theText to my enterSomeText("Set Continue Mode of selected cues to:
+	
+	1 - Do Not Continue
+	2 - Auto-Continue
+	3 - Auto-Follow
+	4 - Cancel", "4", false)
+
+(*
+-- Check for cancel
+if button returned of result = "Cancel" then
+	return
+end if
+
+if theText is "" then
+	error number -128
+	
+end if
+*)
+-- Adjust the cues
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	repeat with eachCue in (selected as list)
+		if theText is "1" then
+			set continue mode of eachCue to do_not_continue
+		else if theText is "2" then
+			set continue mode of eachCue to auto_continue
+		else if theText is "3" then
+			set continue mode of eachCue to auto_follow
+		end if
+	end repeat
+end tell
+
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText
