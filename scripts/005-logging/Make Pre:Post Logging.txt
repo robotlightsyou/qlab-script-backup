@@ -1,0 +1,212 @@
+--Shft+Ctrl+L Make Pre/Post Loggingglobal dialogTitle
+set dialogTitle to "Create Logging Pre/Post Show Cues"
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	
+	make type "group"
+	set groupQ to last item of (selected as list)
+	set q name of groupQ to "INSERT MARKERS INTO CUE STACK"
+	set mode of groupQ to fire_first_enter_group
+	set q number of groupQ to ""
+	
+	--make show logger title cue
+	set showName to my enterSomeText("What is the Show Name?", "TEMPLATE", false)
+	set nameScripty to "tell application id \"com.figure53.QLab.4\" to tell front workspace
+	
+		set themessage to \"----------------------------------------------------------------------\" & return & \"SHOW FILE: " & showName & "\" & return as string
+	set the notes of cue \"WRITE\" to themessage
+	start cue \"WRITE\"
+end tell"
+	
+	make type "script"
+	set nameQ to last item of (selected as list)
+	set properties of nameQ to {q number:"LOG.N", q name:showName, continue mode:auto_continue, script source:nameScripty, post wait:1}
+	set nameCueID to uniqueID of nameQ
+	move cue id nameCueID of parent of nameQ to end of groupQ
+	
+	--make preshow marker
+	set preName to "Preshow Start"
+	set preScripty to "tell application id \"com.figure53.QLab.4\" to tell front workspace
+	set myCue to \"LOG.HOUSE\"
+	set themessage to the q name of cue myCue
+	
+	set notes of cue myCue to (do shell script \"date +%s\") as integer
+	set thedate to current date
+	set this_data to (thedate as string) & space & themessage & return
+	set the notes of cue \"WRITE\" to this_data
+	start cue \"WRITE\"
+end tell"
+	make type "script"
+	set preQ to last item of (selected as list)
+	set properties of preQ to {q number:"LOG.HOUSE", q name:preName, continue mode:auto_continue, script source:preScripty}
+	set preCueID to uniqueID of preQ
+	move cue id preCueID of parent of preQ to end of groupQ
+	
+	--make show start marker
+	set shStName to "Show Start Place with first logging event"
+	set shStScripty to "tell application id \"com.figure53.QLab.4\" to tell front workspace
+	set myCue to \"LOG.START\"
+	set themessage to the q name of cue myCue
+	
+	set notes of cue myCue to (do shell script \"date +%s\") as integer
+	set thedate to current date
+	set this_data to (thedate as string) & space & themessage & return
+	set the notes of cue \"WRITE\" to this_data
+	start cue \"WRITE\"
+end tell"
+	make type "script"
+	set shStQ to last item of (selected as list)
+	set properties of shStQ to {q number:"LOG.START", q name:shStName, continue mode:auto_continue, script source:shStScripty, post wait:1}
+	set shStCueID to uniqueID of shStQ
+	move cue id shStCueID of parent of shStQ to end of groupQ
+	
+	--make end of show marker
+	set endName to "End of Show, place with final marker"
+	set endScripty to "tell application id \"com.figure53.QLab.4\" to tell front workspace
+	set myCue to \"LOG.END\"
+	set themessage to the q name of cue myCue
+	
+	set notes of cue myCue to (do shell script \"date +%s\") as integer
+	set thedate to current date
+	set this_data to (thedate as string) & space & themessage & return
+	set the notes of cue \"WRITE\" to this_data
+	start cue \"WRITE\"
+end tell"
+	make type "script"
+	set endQ to last item of (selected as list)
+	set properties of endQ to {q number:"LOG.END", q name:endName, continue mode:auto_continue, script source:endScripty, post wait:1}
+	set endCueID to uniqueID of endQ
+	move cue id endCueID of parent of endQ to end of groupQ
+	
+	
+	--make postshow marker
+	set postName to "Post Show"
+	set postScripty to "tell application id \"com.figure53.QLab.4\" to tell front workspace
+	set myCue to \"LOG.POST\"
+	set themessage to the q name of cue myCue
+	
+	set notes of cue myCue to (do shell script \"date +%s\") as integer
+	set thedate to current date
+	set this_data to (thedate as string) & space & themessage & return
+	set the notes of cue \"WRITE\" to this_data
+	start cue \"WRITE\"
+end tell"
+	make type "script"
+	set postQ to last item of (selected as list)
+	set properties of postQ to {q number:"LOG.POST", q name:postName, continue mode:auto_continue, script source:postScripty}
+	set postCueID to uniqueID of postQ
+	move cue id postCueID of parent of postQ to end of groupQ
+	
+	---------------------------------------------------------------------------------------------
+	-----------------------------------END MARKERS-----------------------------------------
+	---------------------------------------------------------------------------------------------
+	
+	set groupQ to cue "LOG.T"
+	
+	--make preshow counter
+	set houseName to "HOUSE TIME"
+	set houseScripty to "set myCue to \"LOG.HOUSE.1\"
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+	try
+		set mystring to (q name of cue \"LOG.HOUSE\") & \" TIME\"
+		repeat while the length of mystring is less than 50
+			set mystring to \" \" & mystring
+		end repeat
+		set thesecs to (notes of cue \"LOG.START\") - (notes of cue \"LOG.HOUSE\")
+		set the notes of cue \"CALC1\" to thesecs
+		start cue \"CALC1\"
+		delay 0.2
+		set the notes of cue myCue to the notes of cue \"CALC1\"
+		set the notes of cue \"WRITE\" to return & mystring & \": \" & notes of cue myCue & return
+		start cue \"WRITE\"
+	end try
+	
+end tell"
+	
+	make type "script"
+	set preQ to last item of (selected as list)
+	set properties of preQ to {q number:"LOG.HOUSE.1", q name:houseName, continue mode:auto_continue, script source:houseScripty, post wait:1}
+	set preCueID to uniqueID of preQ
+	move cue id preCueID of parent of preQ to end of groupQ
+	
+	--make running time counter
+	set endName to "RUNNING TIME"
+	set endScripty to "set myCue to \"LOG.END.1\"
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+	try
+		set mystring to \"RUNNING TIME\"
+		repeat while the length of mystring is less than 50
+			set mystring to \" \" & mystring
+		end repeat
+		set thesecs to (notes of cue \"LOG.END\") - (notes of cue \"LOG.START\")
+		set the notes of cue \"CALC1\" to thesecs
+		start cue \"CALC1\"
+		delay 0.2
+		set the notes of cue myCue to the notes of cue \"CALC1\"
+		set the notes of cue \"WRITE\" to return & mystring & \": \" & notes of cue myCue & return
+		start cue \"WRITE\"
+	end try
+	
+	display notification (notes of cue myCue) as text with title \"Running Time\"
+	
+end tell"
+	
+	make type "script"
+	set endQ to last item of (selected as list)
+	set properties of endQ to {q number:"LOG.END.1", q name:endName, continue mode:auto_continue, script source:endScripty, post wait:5}
+	set endCueID to uniqueID of endQ
+	move cue id endCueID of parent of endQ to end of groupQ
+	
+	set groupCueID to uniqueID of groupQ
+	set eachParentID to uniqueID of parent of cue id groupCueID
+	--move cue id groupCueID of cue id eachParentID to end of logList
+	
+	--make total time counter
+	set totName to "TOTAL TIME"
+	set totScripty to "set myCue to \"LOG.TOTAL.1\"
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+	try
+		set mystring to \"TOTAL TIME\"
+		repeat while the length of mystring is less than 50
+			set mystring to \" \" & mystring
+		end repeat
+		set thesecs to (notes of cue \"LOG.POST\") - (notes of cue \"LOG.HOUSE\")
+		set the notes of cue \"CALC1\" to thesecs
+		start cue \"CALC1\"
+		delay 0.2
+		set the notes of cue myCue to the notes of cue \"CALC1\"
+		set the notes of cue \"WRITE\" to return & mystring & \": \" & notes of cue myCue & return
+		start cue \"WRITE\"
+	end try
+	
+	display notification (notes of cue myCue) as text with title \"Total Time\"
+	
+end tell"
+	
+	make type "script"
+	set totQ to last item of (selected as list)
+	set properties of totQ to {q number:"LOG.TOTAL.1", q name:totName, continue mode:auto_continue, script source:totScripty, post wait:5}
+	set totCueID to uniqueID of totQ
+	move cue id totCueID of parent of totQ to end of groupQ
+	
+	set groupCueID to uniqueID of groupQ
+	set eachParentID to uniqueID of parent of cue id groupCueID
+	--move cue id groupCueID of cue id eachParentID to end of logList
+	
+	set the armed of cue "Shft+Ctrl+L" to false
+	
+end tell
+
+
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText

@@ -1,0 +1,21 @@
+--WRITE Writeset myCue to "WRITE"
+tell application id "com.figure53.QLab.4" to tell front workspace
+	set this_data to notes of cue myCue & return
+	set target_file to (((path to desktop folder) as string) & "SHOW LOGGER")
+	set append_data to true
+	try
+		set the target_file to the target_file as string
+		set the open_target_file to open for access file target_file with write permission
+		if append_data is false then set eof of the open_target_file to 0
+		write this_data to the open_target_file starting at eof
+		close access the open_target_file
+		
+		return true
+	on error
+		try
+			close access file target_file
+		end try
+		return false
+	end try
+	
+end tell

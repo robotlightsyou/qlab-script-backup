@@ -1,0 +1,110 @@
+--Ctrl+L Create Logging Start/Stop while building showfile(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*)
+
+--this script will create pre and post show logging the first time it is run
+
+global dialogTitle, qLabel
+set dialogTitle to "Create Logging Cues"
+set qLabel to ""
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	
+	set groupQ to cue "LOG.T"
+	
+	start cue "Shft+Ctrl+L"
+	
+	set numScene to my enterSomeText("Create Start/Stop markers and calculate time logging cues:
+	
+	Which cue number?", "1", false)
+	
+	set qLabel to my enterSomeText("What is the cue label? Printout will read \"(label) TIME:\"", "x", false)
+	
+	set qname to "LOG " & qLabel & " START"
+	set scripty to "tell application id \"com.figure53.QLab.4\" to tell front workspace
+	
+	set myCue to \"LOG." & numScene & "S\"
+	set themessage to the q name of cue myCue
+	
+	set notes of cue myCue to (do shell script \"date +%s\") as integer
+	set thedate to current date
+	set this_data to (thedate as string) & space & themessage & return
+	set the notes of cue \"WRITE\" to this_data
+	start cue \"WRITE\"
+end tell"
+	
+	make type "script"
+	set newQ to last item of (selected as list)
+	set properties of newQ to {q number:"LOG." & numScene & "S", q name:qname, continue mode:do_not_continue, script source:scripty}
+	--set newCueID to uniqueID of newQ
+	--move cue id newCueID of parent of newQ to end of groupQ
+	
+	set endName to "LOG " & qLabel & " END"
+	set scripty to "tell application id \"com.figure53.QLab.4\" to tell front workspace
+	
+	set myCue to \"LOG." & numScene & "E\"
+	set themessage to the q name of cue myCue
+	
+	set notes of cue myCue to (do shell script \"date +%s\") as integer
+	set thedate to current date
+	set this_data to (thedate as string) & space & themessage & return
+	set the notes of cue \"WRITE\" to this_data
+	start cue \"WRITE\"
+end tell"
+	
+	make type "script"
+	set newQ to last item of (selected as list)
+	set properties of newQ to {q number:"LOG." & numScene & "E", q name:endName, continue mode:do_not_continue, script source:scripty}
+	--set newCueID to uniqueID of newQ
+	--move cue id newCueID of parent of newQ to end of groupQ
+	
+	-------------------------------------
+	--END MARKERS
+	-------------------------------------
+	--set groupQ to cue "RUN AFTER SHOW"
+	
+	set qname to "SCENE " & qLabel & " TIME"
+	set scripty to "set myCue to \"LOG." & numScene & ".1\"
+	set noteString to \"\"
+	
+tell application id \"com.figure53.QLab.4\" to tell front workspace
+	try
+		set mystring to \"" & qLabel & "\"  & \" TIME\"
+		repeat while the length of mystring is less than 50
+			set mystring to \" \" & mystring
+		end repeat
+		set thesecs to (notes of cue \"LOG." & numScene & "E\") - (notes of cue \"LOG." & numScene & "S\")
+		set the notes of cue \"CALC1\" to thesecs
+		start cue \"CALC1\"
+		delay 0.2
+		set the notes of cue myCue to the notes of cue \"CALC1\"
+		set the notes of cue \"WRITE\" to return & mystring & \": \" & notes of cue myCue & return
+		start cue \"WRITE\"
+		set noteString to mystring & \": \" & notes of cue myCue
+	end try
+	
+	display notification noteString with title \"Total Time\"
+	
+end tell"
+	
+	make type "script"
+	set newQ to last item of (selected as list)
+	set properties of newQ to {q number:"LOG." & numScene & ".1", q name:qname, continue mode:auto_continue, script source:scripty, post wait:3}
+	set newCueID to uniqueID of newQ
+	move cue id newCueID of parent of newQ to end of groupQ
+	
+	
+end tell
+
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
+				default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText

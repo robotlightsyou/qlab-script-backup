@@ -1,0 +1,24 @@
+--CALC1 CALC 1
+	set myCue to "CALC1"
+tell application id "com.figure53.QLab.4" to tell front workspace
+	try
+		set thesecs to notes of cue myCue
+		set theHours to (thesecs div 3600)
+		
+		set theRemainderSeconds to (thesecs mod 3600) as integer
+		set theMinutes to (theRemainderSeconds div 60)
+		set theRemainderSeconds to (theRemainderSeconds mod 60)
+		
+		if length of (theHours as text) = 1 then
+			set theHours to "0" & (theHours as text)
+		end if
+		
+		if length of (theMinutes as text) = 1 then
+			set theMinutes to "0" & (theMinutes as text)
+		end if
+		if length of (theRemainderSeconds as text) = 1 then
+			set theRemainderSeconds to "0" & theRemainderSeconds as text
+		end if
+		set notes of cue myCue to (theHours & ":" & theMinutes & ":" & theRemainderSeconds)
+	end try
+end tell

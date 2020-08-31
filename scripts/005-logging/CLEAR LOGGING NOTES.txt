@@ -1,0 +1,42 @@
+--Shft+Op+N CLEAR LOGGING NOTES(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*)
+
+--Will not work if a cue list is highlighted
+
+
+tell application "System Events"
+	
+	keystroke "a" using command down
+	delay 0.2
+	
+end tell
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	repeat with eachQ in (selected as list)
+		if q number of eachQ starts with "LOG" then
+			
+			try
+				set notes of eachQ to ""
+			end try
+		end if
+	end repeat
+	
+	set selected to cue "LOG.T"
+	
+	tell application "System Events"
+		keystroke "a" using command down
+		delay 0.2
+	end tell
+	
+	repeat with eachQ in (selected as list)
+		if q number of eachQ starts with "LOG" then
+			
+			try
+				set notes of eachQ to ""
+			end try
+		end if
+	end repeat
+	
+end tell

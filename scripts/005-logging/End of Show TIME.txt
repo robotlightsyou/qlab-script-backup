@@ -1,0 +1,19 @@
+--LOG.END.1 End of Show TIMEset myCue to "LOG.END.1"
+tell application id "com.figure53.QLab.4" to tell front workspace
+	try
+		set mystring to "TOTAL TIME"
+		repeat while the length of mystring is less than 50
+			set mystring to " " & mystring
+		end repeat
+		set thesecs to (notes of cue "LOG.END") - (notes of cue "LOG.1")
+		set the notes of cue "CALC1" to thesecs
+		start cue "CALC1"
+		delay 0.2
+		set the notes of cue myCue to the notes of cue "CALC1"
+		set the notes of cue "WRITE" to return & mystring & ": " & notes of cue myCue & return
+		start cue "WRITE"
+	end try
+	
+	display notification (notes of cue myCue) as text with title "Running Time"
+	
+end tell
