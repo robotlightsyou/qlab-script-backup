@@ -26,7 +26,7 @@ Very handy for theatrical sound design. Includes reset crosspoints stereo,
 isolate crosspoints, set absolute level(master), set relative level(master)
 large/small bump, large/small dip.
 
-## Other
+### Other
 
 Some frequently used miscellany. Includes create Eos Go OSC, create soundcheck
 from selected, createre cue list in Numbers, move cue to cut list, set color
