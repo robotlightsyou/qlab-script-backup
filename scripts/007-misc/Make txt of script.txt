@@ -1,34 +1,3 @@
 --Ctrl+Op+B Make txt of script
 
-tell application id "com.figure53.QLab.4" to tell front workspace
-	
-	repeat with eachQ in (selected as list)
-		
-		if q type of eachQ is "script" then
-			set qname to q name of eachQ
-			
-			set qNum to q number of eachQ
-			
-			set this_data to "--" & qNum & space & qname & return & script source of eachQ
-			
-			set target_file to (((path to desktop folder) as string) & "QLAB:GIT:Earle:Favorites:001-Fades:" & qname)
-			set append_data to true
-			try
-				set the target_file to the target_file as string
-				set the open_target_file to open for access file target_file with write permission
-				if append_data is false then set eof of the open_target_file to 0
-				write this_data to the open_target_file starting at eof
-				close access the open_target_file
-				
-				return true
-			on error
-				try
-					close access file target_file
-				end try
-				return false
-			end try
-		end if
-		
-	end repeat
-	display notification ("Done")
-end tell
+tell application id "com.figure53.QLab.4"		repeat with eachQ in (selected of front workspace as list)				if q type of eachQ is "script" then			set qname to q name of eachQ						set qNum to q number of eachQ						set this_data to "--" & qNum & space & qname & return & script source of eachQ			--set target_file to (((path to desktop folder) as string) & qname)			set target_file to (((path to desktop folder) as string) & "QLAB:GIT:scripts:006-projector:" & qname & ".txt")			set append_data to true			try				set the target_file to the target_file as string				set the open_target_file to open for access file target_file with write permission				if append_data is false then set eof of the open_target_file to 0				write this_data to the open_target_file starting at eof				close access the open_target_file											on error				try					close access file target_file				end try							end try		end if			end repeat	display notification ("Done")end tell
