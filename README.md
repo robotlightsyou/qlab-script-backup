@@ -12,7 +12,8 @@ into the script source of a script cue.
 
 This repo is broken up by how I sort these scripts in cue lists in my personal
 QLab 4 template. I built this template around a specific venue so there may be some
-unusual quirks(audio routing for one can be a little strange).
+unusual quirks(audio routing for one can be a little strange). To ease remembering
+the many hotkeys, the cue number is also the shortcut.
 
 ### Fades
 
