@@ -2,192 +2,43 @@
 Tested with QLab v3.2.14 Oct 2018
 Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
 *) 
-
 global dialogTitle
 set dialogTitle to "Make Projector Cues"
 
-
 tell application id "com.figure53.QLab.4" to tell front workspace
 	
-	set whichProjector to my enterSomeText("Which Projector?
-
-1 - One
-2 - Two
-3 - Both", "1", false)
+	set actionsList to {"Mute.Vid.", "UnMute.Vid.", "Input.Proj.", "OnPower.Vid.", "OffPower.Vid."}
+	set whichCue to my pickFromList(actionsList, "What action?")
 	
-	set whichCue to my enterSomeText("What type of cue?
-
-1 - AvUnMute (dowser open)
-2 - AvMute (dowser closed)
-3 - Inpt (Input change)
-4 - PowerOn
-5 - PowerOff", "1", false)
+	set sourceList to {"1", "2", "3"}
+	set whichProjector to my pickFromList(sourceList, "Which Projectors?")
 	
-	-----------------
-	--PROJECTOR ONE--
-	-----------------
-	----------------------------------------------	
-	--COPY THIS BLOCK FOR #PROJECTORS +1 FOR ALL--
-	--UPDATE FOR EACH BLOCK-- 
+	my makeNewScript(whichCue, whichProjector)
 	
-	--if whichProjector is "x" then-- 
-	
-	--AND-- 
-	
-	--set optScript to (script source of cue "action.x"--
-	
-	--ACCORDINGLY-- 
-	----------------------------------------------	
-	
-	if whichProjector is "1" then
-		if whichCue is "1" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "UnMute.Vid.1")
-			set the properties of newQ to {q name:"Open Projector One", script source:optScript}
-		end if
-	end if
-	if whichProjector is "1" then
-		if whichCue is "2" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "Mute.Vid.1")
-			set the properties of newQ to {q name:"Close Projector One", script source:optScript}
-		end if
-	end if
-	if whichProjector is "1" then
-		if whichCue is "3" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "Input.Proj.1")
-			set the properties of newQ to {q name:"Change Input Projector One", script source:optScript}
-		end if
-	end if
-	if whichProjector is "1" then
-		if whichCue is "4" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "OnPower.Vid.1")
-			set the properties of newQ to {q name:"Power On Projector One", script source:optScript}
-		end if
-	end if
-	if whichProjector is "1" then
-		if whichCue is "5" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "OffPower.Vid.1")
-			set the properties of newQ to {q name:"Power Off Projector One", script source:optScript}
-		end if
-	end if
-	
-	
-	
-	--------------------------------------------------	
-	--END COPY THIS BLOCK FOR #PROJECTORS +1 FOR ALL--
-	--------------------------------------------------
-	
-	-----------------
-	--PROJECTOR TWO--
-	-----------------
-	
-	if whichProjector is "2" then
-		if whichCue is "1" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "UnMute.Vid.2")
-			set the properties of newQ to {q name:"Open Projector Two", script source:optScript}
-		end if
-	end if
-	if whichProjector is "2" then
-		if whichCue is "2" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "Mute.Vid.2")
-			set the properties of newQ to {q name:"Close Projector Two", script source:optScript}
-		end if
-	end if
-	if whichProjector is "2" then
-		if whichCue is "3" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "Input.Proj.2")
-			set the properties of newQ to {q name:"Change Input Projector Two", script source:optScript}
-		end if
-	end if
-	if whichProjector is "2" then
-		if whichCue is "4" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "OnPower.Vid.2")
-			set the properties of newQ to {q name:"Power On Projector Two", script source:optScript}
-		end if
-	end if
-	if whichProjector is "2" then
-		if whichCue is "5" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "OffPower.Vid.2")
-			set the properties of newQ to {q name:"Power Off Projector Two", script source:optScript}
-		end if
-	end if
-	
-	
-	-------------------
-	--ALL PROJECTORS --
-	-------------------
-	
-	if whichProjector is "3" then
-		if whichCue is "1" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "UnMute.Vid.3")
-			set the properties of newQ to {q name:"Open All Projectors", script source:optScript}
-		end if
-	end if
-	if whichProjector is "3" then
-		if whichCue is "2" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "Mute.Vid.3")
-			set the properties of newQ to {q name:"Close All Projectors", script source:optScript}
-		end if
-	end if
-	if whichProjector is "3" then
-		if whichCue is "3" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "Input.Proj.3")
-			set the properties of newQ to {q name:"Change Input All Projectors", script source:optScript}
-		end if
-	end if
-	if whichProjector is "3" then
-		if whichCue is "4" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "OnPower.Vid.3")
-			set the properties of newQ to {q name:"Power On All Projectors", script source:optScript}
-		end if
-	end if
-	if whichProjector is "3" then
-		if whichCue is "5" then
-			make type "Script"
-			set newQ to last item of (selected as list)
-			set optScript to (script source of cue "OffPower.Vid.3")
-			set the properties of newQ to {q name:"Power Off All Projectors", script source:optScript}
-		end if
-	end if
 end tell
 
 
-
-on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+on pickFromList(theChoice, thePrompt) -- [Shared subroutine]
 	tell application id "com.figure53.QLab.4"
-		set theAnswer to ""
-		repeat until theAnswer is not ""
-			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} Â
-				default button "OK" cancel button "Cancel")
-			if emptyAllowed is true then exit repeat
-		end repeat
-		return theAnswer
+		choose from list theChoice with prompt thePrompt with title dialogTitle default items item 1 of theChoice
+		if result is not false then
+			return item 1 of result
+		else
+			error number -128
+		end if
 	end tell
-end enterSomeText
+end pickFromList
+
+
+on makeNewScript(myaction, mySource)
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		
+		set refCue to (myaction & mySource)
+		set newName to q name of cue refCue
+		make type "Script"
+		set newQ to last item of (selected as list)
+		set mySourceScript to (script source of cue refCue)
+		set the properties of newQ to {q name:newName, script source:mySourceScript}
+		
+	end tell
+end makeNewScript
