@@ -27,11 +27,13 @@ tell application id "com.figure53.QLab.4" to tell front workspace
 	
 	repeat with i from 1 to countProjArray by "1"
 		set myOutput to (item i of projArray)
-		my newMakeNewScript(whichCue, myOutput)
+		my makeNewScript(whichCue, myOutput)
 	end repeat
 	
 end tell
-on newMakeNewScript(myCue, output)
+
+
+on makeNewScript(myCue, output)
 	tell application id "com.figure53.QLab.4" to tell front workspace
 		set preamble to "tell application \"ProjectorManager\"
 "
@@ -44,7 +46,7 @@ end tell"
 		set the properties of newQ to {q name:(myCue & output as string), script source:scriptText}
 		
 	end tell
-end newMakeNewScript
+end makeNewScript
 
 
 on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
@@ -57,20 +59,6 @@ on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
 		return theAnswer
 	end tell
 end enterSomeText
-
-
-on makeNewScript(myaction, mySource)
-	tell application id "com.figure53.QLab.4" to tell front workspace
-		
-		set refCue to (myaction & mySource)
-		set newName to q name of cue refCue
-		make type "Script"
-		set newQ to last item of (selected as list)
-		set mySourceScript to (script source of cue refCue)
-		set the properties of newQ to {q name:newName, script source:mySourceScript}
-		
-	end tell
-end makeNewScript
 
 
 on pickFromList(theChoice, thePrompt) -- [Shared subroutine]
