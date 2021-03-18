@@ -1,33 +1,62 @@
---Op+P Make Proj Cue ask Input(*
-Tested with QLab v3.2.14 Oct 2018
+--Op+P Make Proj Cue ask Input
+(*
+Tested with QLab v4.6 Mar 2021
 Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
-*) 
+*)
+
 global dialogTitle
 set dialogTitle to "Make Projector Cues"
 
 tell application id "com.figure53.QLab.4" to tell front workspace
 	
-	set actionsList to {"Mute.Vid.", "UnMute.Vid.", "Input.Proj.", "OnPower.Vid.", "OffPower.Vid."}
+	set actionsList to {"AVUnMute ", "AvMute ", "Inpt ", "PowerOn ", "PowerOff "}
 	set whichCue to my pickFromList(actionsList, "What action?")
 	
-	set sourceList to {"1", "2", "3"}
-	set whichProjector to my pickFromList(sourceList, "Which Projectors?")
+	set projectors to my enterSomeText("Which projectors? You can separate multiple entries with spaces.", "1", false)
 	
-	my makeNewScript(whichCue, whichProjector)
+	--next block converts user input to functional data
+	set currentTIDs to AppleScript's text item delimiters
+	set AppleScript's text item delimiters to space
+	set projWords to text items of projectors
+	set howManyProjs to count projWords
+	set AppleScript's text item delimiters to "\\"
+	set backToText to projWords as text
+	set projArray to text items of backToText
+	set countProjArray to count projArray
+	set AppleScript's text item delimiters to currentTIDs
+	
+	repeat with i from 1 to countProjArray by "1"
+		set myOutput to (item i of projArray)
+		my newMakeNewScript(whichCue, myOutput)
+	end repeat
 	
 end tell
-
-
-on pickFromList(theChoice, thePrompt) -- [Shared subroutine]
-	tell application id "com.figure53.QLab.4"
-		choose from list theChoice with prompt thePrompt with title dialogTitle default items item 1 of theChoice
-		if result is not false then
-			return item 1 of result
-		else
-			error number -128
-		end if
+on newMakeNewScript(myCue, output)
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		set preamble to "tell application \"ProjectorManager\"
+"
+		
+		set ending to "
+end tell"
+		make type "Script"
+		set newQ to last item of (selected as list)
+		set scriptText to preamble & myCue & output & ending
+		set the properties of newQ to {q name:(myCue & output as string), script source:scriptText}
+		
 	end tell
-end pickFromList
+end newMakeNewScript
+
+
+on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		set theAnswer to ""
+		repeat until theAnswer is not ""
+			set theAnswer to text returned of (display dialog thePrompt with title dialogTitle default answer defaultAnswer buttons {"Cancel", "OK"} default button "OK" cancel button "Cancel")
+			if emptyAllowed is true then exit repeat
+		end repeat
+		return theAnswer
+	end tell
+end enterSomeText
 
 
 on makeNewScript(myaction, mySource)
@@ -42,3 +71,16 @@ on makeNewScript(myaction, mySource)
 		
 	end tell
 end makeNewScript
+
+
+on pickFromList(theChoice, thePrompt) -- [Shared subroutine]
+	tell application id "com.figure53.QLab.4"
+		choose from list theChoice with prompt thePrompt with title dialogTitle default items item 1 of theChoice
+		if result is not false then
+			return item 1 of result
+		else
+			error number -128
+		end if
+	end tell
+end pickFromList
+
