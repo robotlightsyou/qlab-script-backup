@@ -1,0 +1,57 @@
+--Shift+Op+C SET COLOR BY TYPE
+(*
+Tested with QLab v3.2.14 Oct 2018
+Please report any issues to robotlightsyou@gmail.com with subject "QLAB 3 template issues"
+*)
+
+(*
+This script intednded to add cue colors to all selected cues based on the type of cue.
+
+NEEDS:
+1. Currently applying to all cue lists, not selected cues
+2. add test for if color red do nothing to not lose misplaced cues
+*)
+
+tell application id "com.figure53.QLab.4" to tell front workspace
+	set selectedCues to (selected as list)
+	repeat with targetQ in selectedCues
+		set colorQ to q number of targetQ
+		if q type of targetQ is "group" then
+			set myColor to "green"
+			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			
+		else if q type of targetQ is in {"network", "midi", "midi file", "timecode", "script"} then
+			set myColor to "blue"
+			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			
+		else if q type of targetQ is in {"audio", "video", "camera", "text", "mic", "fade", "light"} then
+			set myColor to "purple"
+			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			
+		else if q type of targetQ is in {"target", "stop", "start", "goto", "devamp", "load", "pause", "reset"} then
+			set myColor to "grey"
+			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			
+		else if q type of targetQ is in {"arm", "disarm", "wait"} then
+			set myColor to "orange"
+			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
+			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			
+		else if q type of targetQ is "memo" then
+			set myColor to "yellow"
+			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
+			do shell script "echo " & myOSC & " | nc -u  -w 0 127.0.0.1 53535"
+			
+		else if q number of targetQ is "" then
+			set myColor to "none"
+			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
+			do shell script "echo " & myOSC & " | nc -u  -w 0 127.0.0.1 53535"
+		end if
+		
+	end repeat
+	
+end tell
