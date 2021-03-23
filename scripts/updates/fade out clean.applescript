@@ -1,4 +1,4 @@
---Ctrl+F FADE IN SELECTED Q 
+--Shift+Ctrl+F FADE OUT SELECTED Q 
 (*
 Tested with QLab v4.6.9 Mar 2021
 Please report any issues to robotlightsyou@gmail.com with subject "QLAB 4 template issues"
@@ -15,29 +15,25 @@ tell application id "com.figure53.QLab.4" to tell front workspace
 	if originalCueType is in {"Group", "Audio", "Video", "Fade"} then
 
         -- copy the parameters of the target cue
-        set qnameStr to "Fade in: " & q name of originalCue
+        if originalCueType is not "Fade" then
+            set cueTarget to originalCue
+            set qnameStr to "Fade out: " & q name of originalCue
+        else
+            set cueTarget to cue target of originalCue
+            set qnameStr to "Fade out: " & q name of cue target of originalCue
+        end if 
         set userDuration to 5
-        set myPreWait to pre wait of originalCue
-        set continue mode of originalCue to auto_continue
             
         -- make new fade and apply parameters
         make type "Fade"
         set newCue to last item of (selected as list)
-        set properties of newCue to {cue target:originalCue, duration:userDuration, q name:qnameStr, pre wait:myPreWait, q number:""}
-        
-        -- test for group to prevent errors
-        if q type of originalCue is not "Group" then
-            set originalLevel to originalCue getLevel row 0 column 0
-            originalCue setLevel row 0 column 0 db "-INF"
-            newCue setLevel row 0 column 0 db originalLevel
-        end if
+        set properties of newCue to {cue target:cueTarget, duration:userDuration, q name:qnameStr, q number:"", stop target when done:true}
+        newCue setLevel row 0 column 0 db "-INF"
         
         -- test for video to prevent errors
         if originalCueType is "Video" then
-            set myOpacity to opacity of originalCue
-            set opacity of newCue to myOpacity
+            set opacity of newCue to 0
             set do opacity of newCue to true
-            set opacity of originalCue to 0
         end if
 
 	end if

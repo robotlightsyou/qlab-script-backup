@@ -28,7 +28,7 @@ tell application id "com.figure53.QLab.4" to tell front workspace
         --clear existing levels
         my setNewLevel(targetQ, numOutputs, numChan, "{}", levelsArray)
         --apply new values
-        my setNewLevel(targetQ, numOutputs, numChan, "0", levelsArray)
+       -- my setNewLevel(targetQ, numOutputs, numChan, "0", levelsArray)
 
 	end repeat
 end tell
@@ -47,7 +47,8 @@ end enterSomeText
 
 on newChannelLevel(target, theChannel, output, theLevel)
     tell application id "com.figure53.QLab.4" to tell front workspace
-        set myOSC to "/cue/" & (q number of target) & "/level/" & theChannel & "/" & output & " " & theLevel
+		set myID to uniqueID of target
+        set myOSC to "/cue/" & (q number of cue id myID) & "/level/" & theChannel & "/" & output & " " & theLevel
         do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
     end tell
 end newChannelLevel
@@ -61,7 +62,11 @@ on setNewLevel(target, countInputs, countChannels, myLevel, myArray)
                 set mySetting to (item i of myArray)
             end if
             set chan to j
-            my newChannelLevel(target, chan, mySetting, myLevel)
-        end repeat
+				my newChannelLevel(target, chan, mySetting, myLevel)
+		(*)	if i in myArray then
+			end if
+        *)
+		
+		end repeat
     end repeat
 end setNewLevel
