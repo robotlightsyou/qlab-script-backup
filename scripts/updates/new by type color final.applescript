@@ -15,43 +15,43 @@ NEEDS:
 tell application id "com.figure53.QLab.4" to tell front workspace
 	set selectedCues to (selected as list)
 	repeat with targetQ in selectedCues
-		set colorQ to q number of targetQ
-		if q type of targetQ is "group" then
-			set myColor to "green"
-			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
-			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+		set colorQ to uniqueID of targetQ
+		
+		if q color of targetQ is "red" then
+			my setColor(colorQ, "red")
+			
+		else if q type of targetQ is "group" then
+			my setColor(colorQ, "green")
 			
 		else if q type of targetQ is in {"network", "midi", "midi file", "timecode", "script"} then
-			set myColor to "blue"
-			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
-			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			my setColor(colorQ, "blue")
 			
 		else if q type of targetQ is in {"audio", "video", "camera", "text", "mic", "fade", "light"} then
-			set myColor to "purple"
-			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
-			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			my setColor(colorQ, "purple")
 			
 		else if q type of targetQ is in {"target", "stop", "start", "goto", "devamp", "load", "pause", "reset"} then
-			set myColor to "grey"
-			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
-			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			my setColor(colorQ, "grey")
 			
 		else if q type of targetQ is in {"arm", "disarm", "wait"} then
-			set myColor to "orange"
-			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
-			do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+			my setColor(colorQ, "orange")
 			
 		else if q type of targetQ is "memo" then
-			set myColor to "yellow"
-			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
-			do shell script "echo " & myOSC & " | nc -u  -w 0 127.0.0.1 53535"
+			my setColor(colorQ, "yellow")
 			
-		else if q number of targetQ is "" then
-			set myColor to "none"
-			set myOSC to "/cue/{" & colorQ & "}/colorName " & myColor
-			do shell script "echo " & myOSC & " | nc -u  -w 0 127.0.0.1 53535"
 		end if
-		
 	end repeat
 	
 end tell
+(*)
+on setColor(userCue, userColor)
+	set myColor to "green"
+	set myOSC to "/cue_id/{" & UserCue & "}/colorName " & userColor
+	do shell script "echo " & myOSC & " | nc -u -w 0 127.0.0.1 53535"
+end setColor
+*)
+
+on setColor(userCue, userColor)
+	tell application id "com.figure53.QLab.4" to tell front workspace
+		set q color of cue id userCue to userColor
+	end tell
+end setColor
