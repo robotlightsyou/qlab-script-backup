@@ -19,9 +19,15 @@ on enterSomeText(thePrompt, defaultAnswer, emptyAllowed) -- [Shared subroutine] 
 				try
 					set theAnswer to theAnswer as number
 				on error
-					if emptyAllowed is true then exit repeat    
-					display dialog "That was not a valid number, please try again."
-					set theAnswer to ""
+                    -- the next two lines only for QLab
+                    if theAnswer is "-INF" then 
+                        return theAnswer
+					else if emptyAllowed is true then 
+                        exit repeat    
+                    else
+                        display dialog "That was not a valid number, please try again."
+                        set theAnswer to ""
+                    end if
 				end try
 			end if
 			if emptyAllowed is true then exit repeat
