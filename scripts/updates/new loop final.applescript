@@ -6,7 +6,9 @@ Please report any issues to robotlightsyou@gmail.com with subject "QLAB 4 templa
 -- Original by:
    Figure53 Scripts and Macros Page
    Create slideshow from selected cues 
-   Tim Rogers <timmrogers@gmail.com>
+   Tim Rogers <timmrogers@gmail.com
+   
+** Note: Select cues in order they appear in cue list.
 *)
 
 global dialogTitle, myPreviousCue, myColor, myPostWait
@@ -51,7 +53,6 @@ tell application id "com.figure53.QLab.4" to tell front workspace
 	make type "Start"
 	set startLoop to last item of (selected as list)
     set properties of startLoop to {cue target:loopStartTarget, q color:myColor}
-	set cue target of startLoop to loopStartTarget
 	
 end tell
 
