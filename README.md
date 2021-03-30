@@ -8,6 +8,12 @@ uploaded everything as .txt files so their contents will display and to guarante
 version tracking. The text of these files can be copied and pasted directly
 into the script source of a script cue.
 
+These were largely written when I was first learning to code. There are a lot
+of bad practices, and overall it is hacky at best. But the things that work work, and
+they've saved me mountains of time. If you navigate to scripts/updates you will find some 
+newer scripts that have much better coding principles, but still may not be best 
+practices for QLab.
+
 ## Basic Navigation
 
 This repo is broken up by how I sort these scripts in cue lists in my personal
